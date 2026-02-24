@@ -1,4 +1,4 @@
-# Assembly Prompt — {{page_name}}
+# Assembly Prompt — 任務定義頁面
 
 > **使用方式**：填完後，將下方 ``` 區塊內的完整內容複製貼到 Lovable / Claude / GPT-4 等 AI 工具。
 
@@ -7,14 +7,14 @@
 ```markdown
 === GLOBAL PROJECT GUIDELINE (DO NOT OVERRIDE) ===
 
-你是「{{product_name}}」專案的資深產品設計師與前端工程師，負責維護整個專案的設計一致性。
+你是「RD Design Copilot」專案的資深產品設計師與前端工程師，負責維護整個專案的設計一致性。
 
 ### 核心設計系統
-- **配色**：Primary({{primary_color}}) / Secondary({{secondary_color}}) / Accent({{accent_color}}) / Error({{error_color}})
-- **字體**：{{font_family}}，模組化比例 {{type_scale_ratio}}
-- **元件風格**：圓角 {{border_radius}}，{{shadow_style}}，{{border_style}}
-- **語氣**：{{tone_description}}
-- **技術棧**：{{tech_stack}}
+- **配色**：Primary(#007bff) / Secondary(#6c757d) / Accent(#fd7e14) / Error(#dc3545)
+- **字體**："Noto Sans TC", "Helvetica Neue", Arial, "Segoe UI", sans-serif，模組化比例 1.25
+- **元件風格**：圓角 8px (0.5rem)，輕微陰影，增加層次感 (e.g., box-shadow: 0 4px 6px rgba(0,0,0,0.1))，1px solid $color-divider
+- **語氣**：專業精準、結構化、數據驅動、實用主義
+- **技術棧**：React (Frontend)
 
 ### 重要規範
 - 本區段定義整個專案的設計系統與風格
@@ -23,47 +23,42 @@
 
 === CURRENT TASK: BUILD ONE PAGE ===
 
-本次任務：根據上方 Global Guideline，設計並實作「{{page_name}}」。
+本次任務：根據上方 Global Guideline，設計並實作「任務定義頁面」。
 
 ### [PAGE SPECIFICATION]
 
 **頁面元資料**：
-- 路徑：`{{route_path}}`
-- 類型：{{page_type}}
-- 主要目標：{{primary_goal}}
-- 次要目標：{{secondary_goal}}
+- 路徑：`/projects/:id/task-definition`
+- 類型：功能/表單
+- 主要目標：協助用戶結構化地定義新專案的需求、約束與目標。
+- 次要目標：識別關鍵 KPI，為後續決策提供依據。
 
 **目標用戶**：
-- 主要：{{primary_user_segment}}
-- 次要：{{secondary_user_segment}}
+- 主要：RD 工程師
+- 次要：RD 主管, 專案經理 (PM)
 
 **頁面結構**（由上至下）：
-1. **{{section_1_name}}**
-   - 用途：{{section_1_purpose}}
-   - 元件：{{section_1_components}}
-   - 狀態：{{section_1_states}}
-
-2. **{{section_2_name}}**
-   - 用途：{{section_2_purpose}}
-   - 元件：{{section_2_components}}
-   - 狀態：{{section_2_states}}
-
-<!-- 依 sections 數量增減 -->
+1. **任務定義表單區塊**
+   - 用途：讓用戶輸入專案的核心使命、硬約束、軟目標和非目標，並定義關鍵衡量指標。
+   - 元件：`textarea` (Mission, Hard Constraints, Soft Objectives, Non-Goals), `kpi-input-list` (自定義組件), `button` (Submit, Cancel)
+   - 狀態：正常、hover、loading、empty、error
 
 **互動要求**：
-- {{interaction_1}}
-- {{interaction_2}}
-- {{interaction_3}}
+- 用戶填寫表單內容，系統即時進行前端驗證。
+- 用戶點擊「確認任務定義」按鈕，數據提交至後端。
+- 提交成功後，導航至「假設台帳」頁面；提交失敗則顯示錯誤訊息。
 
 **資料處理**：
-- API 端點：{{endpoints}}
-- 載入策略：{{loading_strategy}}
-- 錯誤處理：{{error_handling}}
+- API 端點：
+  - GET `/api/projects/:id/constraints`
+  - PUT `/api/projects/:id/constraints`
+- 載入策略：漸進式載入 (Skeleton Screen)，關鍵數據優先。
+- 錯誤處理：表單字段下方顯示紅色提示，彈出 Toast 訊息，提供重試按鈕。
 
 === EXCEPTION RULES ===
 
 本頁面允許的例外（如有）：
-- {{exception_description}} — 原因：{{exception_reason}}
+- 無特殊例外，完全遵循 Global System Prompt 規範。
 
 === OUTPUT REQUIREMENTS ===
 
@@ -82,7 +77,7 @@
 - 任何必要的權衡考量
 
 ### Step 3: 實作方案
-產出完整的 {{tech_stack}} 程式碼，包含：
+產出完整的 React 程式碼，包含：
 - 元件結構與 props 定義
 - 狀態管理邏輯
 - 互動處理與錯誤處理
@@ -105,6 +100,6 @@
 3. Exception 需明確說明且最小化
 
 **版本資訊**：
-- Global System Prompt 版本：v{{global_version}}
-- Assembly 日期：{{assembly_date}}
-- 負責人：{{owner}}
+- Global System Prompt 版本：v1.0
+- Assembly 日期：2026-02-24
+- 負責人：AI Agent
