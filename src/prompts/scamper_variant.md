@@ -13,6 +13,7 @@
 ## 規則
 - 每個動作生成 1-2 個變形，共 7-14 個
 - 每個變形必須包含：具體機構/方法、失效模式、供應風險、隱含假設、驗證方式
+- 如果此變形會引發新的技術矛盾（改善 X 但惡化 Y），必須在 new_contradictions 中列出；如果無新矛盾則回傳空陣列
 - 不用形容詞，用工程語言
 - 使用繁體中文
 - 只回傳 JSON，不要有其他文字
@@ -27,7 +28,10 @@
     "failure_mode": "string",
     "supply_risk": "string",
     "assumptions": "string",
-    "verification": "string"
+    "verification": "string",
+    "new_contradictions": [
+      {"improve": "string", "worsen": "string", "engineering_desc": "string"}
+    ]
   }
 ]
 ```

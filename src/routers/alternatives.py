@@ -8,6 +8,8 @@ from src.models.alternative import Alternative
 from src.models.triz import TrizSolution
 from src.models.scamper import ScamperVariant
 from src.models.assumption import Assumption
+from src.models.contradiction import Contradiction
+from src.models.causal_loop import Breakpoint
 from src.models.definition import TaskDefinition
 from src.schemas.alternative import AlternativeCreate, AlternativeUpdate, AlternativeResponse
 from src.services.llm_service import llm_service
@@ -86,6 +88,63 @@ def generate_alternatives(project_id: str, db: Session = Depends(get_db)):
             assumptions=item.get("assumptions", []),
             risks=item.get("risks", {}),
             robust_scores=item.get("robust_scores", {}),
+        )
+        db.add(a)
+        alts.append(a)
+
+    db.commit()
+    for a in alts:
+        db.refresh(a)
+    return alts
+
+
+@router.post("/anti-anchor", response_model=list[AlternativeResponse])
+def anti_anchor_sprint(project_id: str, db: Session = Depends(get_db)):
+    """Generate 3 non-conventional architecture concepts to break path dependency."""
+    contradictions = db.query(Contradiction).filter_by(project_id=project_id).all()
+    if not contradictions:
+        raise HTTPException(400, "No contradictions found — complete Step 1.3 first")
+
+    defn = db.query(TaskDefinition).filter_by(project_id=project_id).first()
+    constraints = json.dumps(defn.hard_constraints, ensure_ascii=False) if defn else ""
+
+    breakpoints = db.query(Breakpoint).filter_by(project_id=project_id).all()
+    triz = db.query(TrizSolution).filter_by(project_id=project_id).all()
+
+    contradictions_text = "\n".join(
+        f"{c.code}: 改善「{c.improve_param}」vs 惡化「{c.worsen_param}」— {c.engineering_desc}"
+        for c in contradictions
+    )
+    breakpoints_text = "\n".join(
+        f"{bp.code}: {bp.location} — {bp.description}" for bp in breakpoints
+    ) or "(無斷路點)"
+    existing_solutions = "\n".join(
+        f"#{s.principle_number} {s.principle_name}: {', '.join(s.engineering_mappings or [])}"
+        for s in triz
+    ) or "(無現有解法)"
+
+    result = llm_service.generate(
+        "anti_anchor_sprint.md",
+        {
+            "constraints": constraints,
+            "contradictions": contradictions_text,
+            "breakpoints": breakpoints_text,
+            "existing_solutions": existing_solutions,
+        },
+    )
+
+    alts = []
+    for item in result:
+        a = Alternative(
+            project_id=project_id,
+            code=item.get("code", f"AA-{len(alts)+1}"),
+            name=item["name"],
+            source=item.get("source", "Anti-Anchor Sprint"),
+            mechanism=item.get("mechanism", {}),
+            assumptions=item.get("assumptions", []),
+            risks=item.get("risks", {}),
+            robust_scores=item.get("robust_scores", {}),
+            status="anti_anchor",
         )
         db.add(a)
         alts.append(a)

@@ -14,6 +14,7 @@ class ScamperVariantResponse(BaseModel):
     supply_risk: str
     assumptions: str
     verification: str
+    new_contradictions: list[dict] = []
     created_at: datetime
 
     model_config = {"from_attributes": True}

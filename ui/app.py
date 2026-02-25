@@ -68,6 +68,7 @@ if st.session_state.project_id:
             "Gate 1.1",
             "Step 2.1 - 假設台帳",
             "Step 2.1 - 未知集合 (U)",
+            "Step 2.2.1 - Anti-Anchor Sprint",
             "Step 2.2.2 - TRIZ 解法",
             "Step 2.2.4 - SCAMPER 變形",
             "Step 2.2.5 - 方案集合",
@@ -719,11 +720,50 @@ elif page == "Step 2.2.2 - TRIZ 解法":
                         st.warning("未生成 Su-Field 解法。")
 
 
+# --- Step 2.2.1: Anti-Anchor Sprint ---
+elif page == "Step 2.2.1 - Anti-Anchor Sprint":
+    st.header("Anti-Anchor Sprint (反路徑依賴)")
+    st.caption("刻意打破慣性思維，產出 3 種非典型架構概念，至少 1 種與市場主流不相容。")
+
+    if st.button("AI 產生非典型架構", type="primary"):
+        with st.spinner("AI 正在產生非典型架構概念..."):
+            try:
+                api.anti_anchor_sprint(pid)
+                st.rerun()
+            except RuntimeError as e:
+                st.error(str(e))
+
+    alts = api.list_alternatives(pid)
+    aa_alts = [a for a in alts if a.get("status") == "anti_anchor"]
+    if aa_alts:
+        for a in aa_alts:
+            with st.expander(f"{a['code']}: {a['name']} [Anti-Anchor]"):
+                st.write(f"**來源**: {a.get('source', '')}")
+                st.write(f"**機構**: {json.dumps(a.get('mechanism', {}), ensure_ascii=False, indent=2)}")
+                st.write(f"**假設**: {a.get('assumptions', [])}")
+                st.write(f"**風險**: {json.dumps(a.get('risks', {}), ensure_ascii=False, indent=2)}")
+                scores = a.get("robust_scores", {})
+                if scores:
+                    st.write(f"**Robust 預評分**: {json.dumps(scores, ensure_ascii=False)}")
+    else:
+        st.info("尚未產生非典型架構，請點擊上方按鈕。")
+
+
 # --- Step 2.2.4: SCAMPER ---
 elif page == "Step 2.2.4 - SCAMPER 變形":
     st.header("SCAMPER 變形")
 
-    subsystem = st.text_input("子系統名稱", placeholder="例如：馬達-減速機模組")
+    # Subsystem input with suggestions
+    suggestions = api.suggest_subsystems(pid)
+    if suggestions:
+        subsystem_option = st.selectbox("子系統名稱", ["(自訂)"] + suggestions)
+        if subsystem_option == "(自訂)":
+            subsystem = st.text_input("輸入子系統名稱", placeholder="例如：馬達-減速機模組")
+        else:
+            subsystem = subsystem_option
+    else:
+        subsystem = st.text_input("子系統名稱", placeholder="例如：馬達-減速機模組")
+
     if st.button("AI 生成 SCAMPER 變形", type="primary") and subsystem:
         with st.spinner("AI 正在生成 SCAMPER 變形..."):
             api.generate_scamper(pid, subsystem)
@@ -731,6 +771,18 @@ elif page == "Step 2.2.4 - SCAMPER 變形":
 
     variants = api.list_scamper(pid)
     if variants:
+        # Check for new contradictions
+        has_new_contradictions = any(v.get("new_contradictions") for v in variants)
+        if has_new_contradictions:
+            st.warning("部分變形發現了新矛盾，可回饋到矛盾列表。")
+            if st.button("回饋新矛盾到矛盾列表"):
+                result = api.feedback_scamper_contradictions(pid)
+                count = result.get("created_count", 0)
+                if count > 0:
+                    st.success(f"已建立 {count} 條新矛盾")
+                else:
+                    st.info("無新矛盾需要建立（已存在或無新發現）")
+
         actions = {"S": "Substitute", "C": "Combine", "A": "Adapt", "M": "Modify",
                    "P": "Put to other use", "E": "Eliminate", "R": "Rearrange"}
         for action_key, action_name in actions.items():
@@ -742,6 +794,11 @@ elif page == "Step 2.2.4 - SCAMPER 變形":
                         st.write(f"**機構**: {v['mechanism']}")
                         st.write(f"**失效模式**: {v.get('failure_mode', '')}")
                         st.write(f"**供應風險**: {v.get('supply_risk', '')}")
+                        ncs = v.get("new_contradictions", [])
+                        if ncs:
+                            st.warning(f"發現 {len(ncs)} 條新矛盾：")
+                            for nc in ncs:
+                                st.write(f"  - 改善「{nc.get('improve', '')}」vs 惡化「{nc.get('worsen', '')}」— {nc.get('engineering_desc', '')}")
 
 
 # --- Step 2.2.5: Alternatives ---

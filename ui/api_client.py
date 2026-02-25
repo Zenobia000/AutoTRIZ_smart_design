@@ -150,6 +150,12 @@ def list_scamper(pid: str):
 def generate_scamper(pid: str, subsystem: str, constraints: str = ""):
     return _handle(httpx.post(_url(f"/projects/{pid}/scamper/generate"), json={"subsystem": subsystem, "constraints": constraints}, timeout=TIMEOUT))
 
+def feedback_scamper_contradictions(pid: str):
+    return _handle(httpx.post(_url(f"/projects/{pid}/scamper/feedback-contradictions"), timeout=TIMEOUT))
+
+def suggest_subsystems(pid: str):
+    return _handle(httpx.get(_url(f"/projects/{pid}/scamper/subsystem-suggestions"), timeout=TIMEOUT))
+
 
 # --- Alternatives ---
 def list_alternatives(pid: str):
@@ -157,6 +163,9 @@ def list_alternatives(pid: str):
 
 def generate_alternatives(pid: str):
     return _handle(httpx.post(_url(f"/projects/{pid}/alternatives/generate"), timeout=TIMEOUT))
+
+def anti_anchor_sprint(pid: str):
+    return _handle(httpx.post(_url(f"/projects/{pid}/alternatives/anti-anchor"), timeout=TIMEOUT))
 
 def update_alternative(pid: str, alt_id: str, data: dict):
     return _handle(httpx.put(_url(f"/projects/{pid}/alternatives/{alt_id}"), json=data, timeout=TIMEOUT))
