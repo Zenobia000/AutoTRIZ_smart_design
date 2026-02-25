@@ -1,11 +1,12 @@
 # AI Agent 架構設計：RD Design Copilot E2E 自動化
 
-> **版本**：v1.4 | **日期**：2026-02-25
+> **版本**：v1.5 | **日期**：2026-02-25
 > **目的**：從 AI Agent 角度重新梳理 E2E 流程，定義自動化等級與多代理協作機制，重點解決 RD 路徑依賴問題。
-> **對齊依據**：`RD_Design_Copilot_整合流程.md` v1.7 + `RD_Design_Copilot_State_Machine.md` v1.5
+> **對齊依據**：`RD_Design_Copilot_整合流程.md` v1.7 + `RD_Design_Copilot_State_Machine.md` v1.6
 > **v1.2 更新**：TRIZ Solver Agent 升級為三路徑統一求解架構，反映已實作的 `triz_engine.py` 規則引擎 + `triz_solve_service.py` orchestrator + 5 個 Prompt 模板。
 > **v1.3 更新**：Analyst Agent 新增假設推翻影響分析能力（`POST /assumptions/{id}/disprove` + `source_refs` 反查 + impact_analysis）。Step 2.1 R&R 新增 PDCA 迭代迴路（Step 2.2 → Step 2.1 回流）。未知集合 (U) 與假設透過 `assumption_refs` 結構化關聯。
 > **v1.4 更新**：反映 Gap #3/#4/#5 已實作——(1) Anti-Anchor Sprint 端點 (`POST /alternatives/anti-anchor`)、(2) SCAMPER 新矛盾回饋迴路 (`POST /scamper/feedback-contradictions` + `new_contradictions`)、(3) 子系統智慧建議 (`GET /scamper/subsystem-suggestions`)。TRIZ Solver Agent 工具綁定新增 `scamper_contradiction_feedback` 和 `subsystem_suggester`。
+> **v1.5 更新**：反映 8-Gate 完整系統實作（gate_id 字串 "1.1"-"3.3"，8 個 checker）。Evaluator Agent 工具更新：新增 `pre_cad_ai_analyzer`（`POST /pre-cad-reviews/{id}/ai-analyze`，5 維度 LLM 審查）、`evidence_matrix_aggregator`（`GET /experiments/evidence-matrix`，假設×證據聚合）、`want_criteria_seeder`（`POST /want/criteria/seed`，W1-W6 標準模板）。Gate 判定表更新為 8 Gate 完整邏輯。
 
 ---
 
@@ -17,7 +18,7 @@
 |-------|------|---------|---------|
 | **Analyst Agent** | 需求解構、索克拉底問答、因果迴路建模、矛盾識別、假設質疑、**假設推翻影響分析 (PDCA)**、**假設批次萃取** | 語意理解、結構化拆解、隱含假設偵測、**source_refs 反查受影響工件**、**impact_analysis + recommended_actions 生成** | LLM、Prompt Template、Functional Model Generator、**Assumption Disprove API** |
 | **TRIZ Solver Agent** | AutoTRIZ 三路徑統一求解 (`POST /triz/solve`) + SCAMPER 變形 + **新矛盾回饋** (`POST /scamper/feedback-contradictions`) + **子系統建議** (`GET /scamper/subsystem-suggestions`) | 矛盾分類 (LLM)、參數映射 (LLM+KB)、矩陣查表 (規則引擎)、分離原則注入、76 標準解匹配、原理具體化 (LLM+KB)、**SCAMPER→矛盾閉環回饋**、**子系統規則提取 (零 LLM)** | `triz_engine.py` (規則引擎)、`triz_solve_service.py` (orchestrator)、5 Prompt Templates、LLM、RAG |
-| **Evaluator Agent** | MUST 規則驗證、KT 決策分析、證據品質評分、Gate 判定 | 規則引擎、加權評分、風險評估 | MUST Rulebook、Evidence Matrix、Risk Register、LLM |
+| **Evaluator Agent** | MUST 規則驗證、KT 決策分析、證據品質評分、Gate 判定 (8 Gate)、**Pre-CAD 5 維度 AI 審查**、**證據矩陣聚合**、**WANT 標準模板** | 規則引擎、加權評分、風險評估、**5 維度評分自動化** | MUST Rulebook、Evidence Matrix、Risk Register、LLM、**PreCadReview Model**、**Experiment.evidence_level** |
 | **Knowledge Agent** | 企業 RAG 檢索、Web 文獻搜尋、跨域類比、知識回寫 | 向量檢索、Web Scraping、文件分類、Citation 生成 | Vector DB、Web Search API、Document Store |
 
 ### 1.2 Orchestrator（編排器）
@@ -119,10 +120,10 @@ graph TB
 | 1.3 | 輔助因果迴路圖、正式化矛盾句 | 協助繪製因果迴路、提供 TRIZ 模板 | Analyst + TRIZ Solver |
 | 2.1 | 填寫假設台帳、定義未知集合、**對 Disproved 假設做處置決策** | 提供模板、整理未知因子、**假設推翻影響分析 (disprove + source_refs 反查 → impact_analysis)**、**批次萃取假設 (extract)** | Analyst + Knowledge |
 | 2.2 | 定義子系統（從建議選取或自訂）、審查方案、執行 MUST | Anti-Anchor (`POST /alternatives/anti-anchor`) / TRIZ / SCAMPER (含 `new_contradictions` 回饋 `POST /scamper/feedback-contradictions`) / 子系統建議 (`GET /scamper/subsystem-suggestions`) / 方案生成 / MUST 快篩 | TRIZ Solver + Analyst + Evaluator |
-| 2.3 | 依 Pre-CAD 模板審查、決策保留路線 | 提供模板、匯總審查結果 | Evaluator |
-| 3.1 | 繪製 MVP CAD、填 DR EM、黑帽質疑 | 提供模板、失效案例比對 | Evaluator + Knowledge |
-| 3.1.loop | 設計/執行最小實驗 | 協助實驗設計、歸檔證據 | Knowledge |
-| 3.2 | KT 決策 (WANT 評分 + AC)、簽核 | 提供 KT 模板、整理風險矩陣 | Evaluator |
+| 2.3 | 依 Pre-CAD 模板審查、決策保留路線 | 5 維度評分自動化 (`POST /pre-cad-reviews`) + AI 深度分析 (`POST /pre-cad-reviews/{id}/ai-analyze`)、匯總審查結果 | Evaluator |
+| 3.1 | 繪製 MVP CAD、填 DR EM、黑帽質疑 | **證據矩陣聚合** (`GET /experiments/evidence-matrix`)、提供模板、失效案例比對 | Evaluator + Knowledge |
+| 3.1.loop | 設計/執行最小實驗 | 協助實驗設計、歸檔證據 (含 `evidence_level` E0-E4) | Knowledge |
+| 3.2 | KT 決策 (WANT 評分 + AC)、簽核 | **WANT 標準模板** (`POST /want/criteria/seed` W1-W6)、提供 KT 模板、整理風險矩陣 | Evaluator |
 | 3.3 | 製作摘要、編寫 FAQ | 知識沉澱為可重用資產 | Knowledge |
 
 ---
@@ -328,18 +329,18 @@ sequenceDiagram
 
 > 對齊 State Machine §Gate 與 Phase 轉換對照表，完整列出所有 Gate。
 
-| Gate | 位置 | Gate 類型 | Phase 轉換 | 可否自動 | 判定邏輯 | Fallback |
-|------|------|-----------|-----------|---------|---------|---------|
-| **Gate 1.1** | Step 1.1 → Step 1.2 | 內部 Gate | **DRAFT → PHASE_1** | AI-Driven | 三個最不能失敗指標已明確且可量測 | 人類覆審 |
-| **Gate 1.2** | Step 1.2 → Step 1.3 | 內部 Gate | Phase 1 內部 | AI-Driven | ≥10 條假設 + Top 3 致命假設 + ≥3 條核心矛盾 | 人類覆審 |
-| **Phase Gate 1** | Step 1.3 → Step 2.1 | Phase Gate | **PHASE_1 → PHASE_2** | AI-Driven | ≥1 因果迴路 + ≥3 斷路點 + 每條矛盾有 TRIZ 正式句 | 人類覆審 |
-| **Gate 2.1** | Step 2.1 → Step 2.2 | 內部 Gate | Phase 2 內部 | AI-Driven | Top 3 假設每個有 1-2 週內可完成的驗證設計 | 人類覆審 |
-| **Gate 2.2.1** | Step 2.2.1 → Step 2.2.2 | 內部 Gate | Phase 2 內部 | **Fully Auto** | ≥1 非對標路線且初步通過 M1 + M4 | 自動回退 2.2.1 |
-| **Gate 2.2** | Step 2.2 → Step 2.3 | **Pre-CAD Gate** | Phase 2 內部 | AI-Driven | ≥3 條架構級路線 + ≥1 Anti-Anchor + 每條有完整方案規格 + DS ≥ 0.4 | 人類覆審 |
-| **Phase Gate 2** | Step 2.3 → Step 3.1 | **CAD Gate** | **PHASE_2 → PHASE_3** | Human-Led | 候選收斂至 3-5 條 + Interface Contract 已更新 + 最小 CAD 範圍明確 | N/A |
-| **Gate 3.1** | Step 3.1 → Step 3.1.loop | 內部 Gate | Phase 3 內部 | AI-Driven | 北極星指標證據 ≥ E2，否則進入 3.1.loop 迴圈 | 人類覆審 |
-| **Gate 3.2** | Step 3.2 → Step 3.3 | 內部 Gate | Phase 3 內部 | Human-Led | KT 決策記錄完整已簽核 + 所有 H 風險有緩解 | N/A |
-| **Phase Gate 3** | Step 3.3 → Done | Phase Gate | **PHASE_3 → COMPLETED** | AI-Driven | 所有核心工件 Baselined → Released | 人類覆審 |
+| Gate | 位置 | Gate 類型 | Phase 轉換 | 可否自動 | 已實作 Checker (`POST /gates/{gate_id}/check`) | Fallback |
+|------|------|-----------|-----------|---------|------------------------------------------------|---------|
+| **Gate 1.1** | Step 1.1 → Step 1.2 | 內部 Gate | **DRAFT → PHASE_1** | AI-Driven | `check_gate_1_1`: TaskDefinition 存在 + mission 已填 + ≥3 critical_metrics 各有 method | 人類覆審 |
+| **Gate 1.2** | Step 1.2 → Step 1.3 | 內部 Gate | Phase 1 內部 | AI-Driven | `check_gate_1_2`: ≥10 Assumption + ≥3 High/Medium-High + ≥3 Contradiction | 人類覆審 |
+| **Phase Gate 1 (=1.3)** | Step 1.3 → Step 2.1 | Phase Gate | **PHASE_1 → PHASE_2** | AI-Driven | `check_gate_1_3`: ≥1 CausalLoop + ≥3 Breakpoint + 所有 Contradiction.contradiction_types 非空 | 人類覆審 |
+| **Gate 2.1** | Step 2.1 → Step 2.2 | 內部 Gate | Phase 2 內部 | AI-Driven | `check_gate_2_1`: ≥3 High Assumption + 每個有 Experiment (assumption_id 關聯) | 人類覆審 |
+| **Gate 2.2** | Step 2.2 → Step 2.3 | **Pre-CAD Gate** | Phase 2 內部 | AI-Driven | `check_gate_2_2`: ≥3 Alternative (must_pass/selected/backup) + 每條有 mechanism+assumptions+risks | 人類覆審 |
+| **Phase Gate 2 (=2.3)** | Step 2.3 → Step 3.1 | **CAD Gate** | **PHASE_2 → PHASE_3** | AI-Driven | `check_gate_2_3`: ≥3 selected Alternative 有 robust_scores + ≥1 PreCadReview.overall_pass=True | 人類覆審 |
+| **Gate 3.2** | Step 3.2 → Step 3.3 | 內部 Gate | Phase 3 內部 | Human-Led | `check_gate_3_2`: DecisionRecord 已簽核 + 所有 WANT 有證據 + 所有 H/H* Risk 有 mitigation | N/A |
+| **Phase Gate 3 (=3.3)** | Step 3.3 → Done | Phase Gate | **PHASE_3 → COMPLETED** | AI-Driven | `check_gate_3_3`: DecisionRecord 已簽核 + H/H* Risk 有 mitigation + action_items 非空 | 人類覆審 |
+
+> **實作說明**：Gate 系統使用字串 gate_id（"1.1", "1.2", ..., "3.3"），所有 8 個 Gate 共用同一端點 `POST /gates/{gate_id}/check`，內部分派到對應的 checker 函數。Gate 2.2.1 和 Gate 3.1 為概念性 Gate，目前未實作獨立 checker（分別由 Anti-Anchor Sprint 流程和證據矩陣 E-level 檢查隱含覆蓋）。
 
 ### 4.4 Artifact State 轉換（對齊 State Machine）
 
@@ -452,12 +453,19 @@ evaluator_agent:
     - kt_scorer                   # Step 3.2 KT 加權評分 (WANT + AC)
     - evidence_quality_assessor   # Step 3.1 E-level 評估
     - diversity_score_calculator  # Gate 2.2 前方案多樣性
-    - pre_cad_reviewer            # Step 2.3 5 維度審查
+    - pre_cad_reviewer            # Step 2.3 5 維度審查 (POST /pre-cad-reviews)
+    - pre_cad_ai_analyzer         # Step 2.3 AI 深度分析 (POST /pre-cad-reviews/{id}/ai-analyze)
+    - evidence_matrix_aggregator  # Step 3.1 證據矩陣聚合 (GET /experiments/evidence-matrix)
+    - want_criteria_seeder        # Step 3.2 WANT 標準模板 W1-W6 (POST /want/criteria/seed)
+    - gate_checker                # 8-Gate 統一檢查 (POST /gates/{gate_id}/check)
     - anti_anchor_gate_checker    # Step 2.2.1→2.2.2 反錨定檢查
   templates:
     - MUST_Rulebook_Template.md
     - Pre_CAD_Review_Template.md
     - Evidence_Matrix_Risk_Register_Template.md
+  prompts:
+    - pre_cad_review.md           # Step 2.3 Pre-CAD 5 維度 AI 審查 prompt
+    - assumption_challenge.md     # Step 1.2 假設質疑 prompt
 
 knowledge_agent:
   llm: claude-haiku-4-5  # 快速檢索用輕量模型

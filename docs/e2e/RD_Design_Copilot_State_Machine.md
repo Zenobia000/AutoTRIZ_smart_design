@@ -7,6 +7,7 @@
 > **v1.3 更新**：Step 2.2.2 TRIZ 解矛盾升級為三路徑統一求解（`POST /triz/solve`），分類(LLM) → TC/PC/SF 路由 → 規則引擎查表 + LLM 具體化，回傳 `UnifiedTrizResult`。
 > **v1.4 更新**：新增 Step 2.1 ↔ Step 2.2 假設推翻迭代迴路。Step 2.1 AI R&R 新增「假設推翻影響分析」（`POST /assumptions/{id}/disprove`）。Gate 2.1 檢查點新增 Disproved 假設處置要求。未知集合 (U) 與假設透過 `assumption_refs` 結構化關聯。
 > **v1.5 更新**：Step 2.2 AI R&R 新增三項已實作能力：(1) Anti-Anchor Sprint 端點 (`POST /alternatives/anti-anchor`)，(2) SCAMPER 新矛盾回饋迴路 (`POST /scamper/feedback-contradictions` + `new_contradictions` 欄位)，(3) 子系統智慧建議 (`GET /scamper/subsystem-suggestions`，從斷路點+TRIZ 解法自動提取)。
+> **v1.6 更新**：8-Gate 系統完整實作（gate_id 從整數改為字串 "1.1"-"3.3"，共 8 個 checker）。Step 2.3 Pre-CAD Review 已實作（`PreCadReview` model，5 維度評分 space/cost/safety/decoupling/supply 各 1-5 分 + AI 分析端點）。Step 3.1 證據矩陣已實作（`Experiment.evidence_level` E0-E4 + `GET /experiments/evidence-matrix` 聚合端點）。Step 3.2 WANT 標準模板已實作（`POST /want/criteria/seed` 建立 W1-W6 標準條件）。Gate 判定邏輯已更新，反映各 Gate 的實際 checker 規則。
 
 ## Step 編號對照
 
@@ -26,125 +27,93 @@
 ## 核心流程狀態機 (Process State Machine)
 
 ```mermaid
-stateDiagram-v2
-    direction LR
+graph LR
+    subgraph Phase1["Phase 1: Define"]
+        S1_1["Step 1.1<br>問題界定"] -->|"Gate 1.1"| S1_2["Step 1.2<br>理解全貌"]
+        S1_2 -->|"Gate 1.2"| S1_3["Step 1.3<br>系統建模"]
+    end
 
-    state "Phase 1: Define (定義問題空間)" as Phase1 {
-        state "Step 1.1: 問題界定" as S1_1
-        state "Step 1.2: 理解全貌" as S1_2
-        state "Step 1.3: 系統建模" as S1_3
+    subgraph Phase2["Phase 2: Diverge"]
+        S2_1["Step 2.1<br>假設與驗證規劃"]
+        subgraph S2_2["Step 2.2: 創造與調整"]
+            S2_2_1["2.2.1 Anti-Anchor"] -->|"Gate 2.2.1"| S2_2_2["2.2.2 TRIZ 統一求解"]
+            S2_2_2 --> S2_2_3["2.2.3 子系統定義"]
+            S2_2_3 --> S2_2_4["2.2.4 SCAMPER 變形"]
+            S2_2_2 --> S2_2_5["2.2.5 AI 方案生成"]
+            S2_2_4 --> S2_2_5
+            S2_2_5 --> S2_2_6["2.2.6 MUST 快篩"]
+        end
+        S2_1 -->|"Gate 2.1"| S2_2_1
+        S2_2_6 -.->|"假設推翻 PDCA"| S2_1
+        S2_2_6 -->|"Gate 2.2"| S2_3["Step 2.3<br>Pre-CAD 審查"]
+    end
 
-        S1_1 --> S1_2 : Gate 1.1 ✓
-        S1_2 --> S1_3 : Gate 1.2 ✓
-    }
+    subgraph Phase3["Phase 3: Converge"]
+        S3_1["Step 3.1<br>設計審查+證據矩陣"]
+        S3_1_loop["Step 3.1.loop<br>證據補齊"]
+        S3_2["Step 3.2<br>決策與行動"]
+        S3_3["Step 3.3<br>內化與傳達"]
+        S3_1 -.->|"證據缺口"| S3_1_loop
+        S3_1_loop -.->|"證據更新"| S3_1
+        S3_1 -->|"證據充足"| S3_2
+        S3_2 -->|"Gate 3.2"| S3_3
+    end
 
-    state "Phase 2: Diverge (假設與發散)" as Phase2 {
-        state "Step 2.1: 假設與驗證規劃" as S2_1
-        state "Step 2.2: 創造與調整" as S2_2 {
-            state "2.2.1: Anti-Anchor Sprint" as S2_2_1
-            state "2.2.2: TRIZ 統一求解 (TC/PC/SF)" as S2_2_2
-            state "2.2.3: 子系統定義" as S2_2_3
-            state "2.2.4: SCAMPER 變形" as S2_2_4
-            state "2.2.5: AI 方案生成" as S2_2_5
-            state "2.2.6: MUST 快篩" as S2_2_6
-
-            S2_2_1 --> S2_2_2 : Gate 2.2.1 ✓
-            S2_2_2 --> S2_2_3 : 解法方向 → 指定子系統
-            S2_2_3 --> S2_2_4 : 每個子系統執行 SCAMPER
-            S2_2_2 --> S2_2_5 : TRIZ 解法
-            S2_2_4 --> S2_2_5 : SCAMPER 變形
-            S2_2_5 --> S2_2_6 : 候選方案 → Go/No-Go
-        }
-        state "Step 2.3: Pre-CAD 設計審查" as S2_3
-        S2_1 --> S2_2 : Gate 2.1 ✓
-        S2_2 --> S2_1 : 假設推翻 (PDCA 迭代)
-        S2_2 --> S2_3 : Gate 2.2 ✓ (MVP CAD 候選集)
-    }
-
-    state "Phase 3: Converge (收斂與驗證)" as Phase3 {
-        state "Step 3.1: 設計審查" as S3_1
-        state "Step 3.1.loop: 證據補齊" as S3_1_loop
-        state "Step 3.2: 決策與行動" as S3_2
-        state "Step 3.3: 內化與傳達" as S3_3
-
-        S3_1 --> S3_1_loop : 證據缺口 Found
-        S3_1_loop --> S3_1 : 證據更新
-        S3_1 --> S3_2 : Phase Gate 2 ✓ (證據充足)
-        S3_2 --> S3_3 : Gate 3.2 ✓
-    }
-
-    [*] --> S1_1 : DRAFT→PHASE_1 (Gate 1.1)
-    S1_3 --> S2_1 : Phase Gate 1 ✓ (PHASE_1→PHASE_2)
-    S2_3 --> S3_1 : PHASE_2→PHASE_3 (Phase Gate 2)
-    S3_3 --> [*] : Phase Gate 3 ✓ (PHASE_3→COMPLETED)
+    S1_3 ==>|"Phase Gate 1<br>Gate 1.3"| S2_1
+    S2_3 ==>|"Phase Gate 2<br>Gate 2.3"| S3_1
+    S3_3 ==>|"Phase Gate 3<br>Gate 3.3"| Done(("COMPLETED"))
 ```
 
 ## Gate 與 Phase 轉換對照 (更新)
 
 系統有 8 個 Step-level Gate（每步一個），其中 4 個同時觸發 Phase 轉換：
 
-| Gate | 位置 | Gate 類型 | Phase 轉換？ | 關鍵工件狀態轉換 |
-|------|------|-----------|-------------|--------------------|
-| Gate 1.1 | Step 1.1 → Step 1.2 | 內部 Gate | **DRAFT → PHASE_1** | Constraint: Draft → Reviewed |
-| Gate 1.2 | Step 1.2 → Step 1.3 | 內部 Gate | Phase 1 內部 | Contradiction, Assumption: Draft → Reviewed |
-| Phase Gate 1 (= Gate 1.3) | Step 1.3 → Step 2.1 | 內部 Gate | **PHASE_1 → PHASE_2** | Contradiction: Reviewed → Verified; Breakpoint: Draft → Reviewed |
-| Gate 2.1 | Step 2.1 → Step 2.2 | 內部 Gate | Phase 2 內部 | Assumption: Reviewed → Verified; Disproved 假設已處置 |
-| **Gate 2.2** | Step 2.2 → Step 2.3 | **Pre-CAD Gate** | Phase 2 內部 | Concept Route: Draft → Reviewed |
-| **Phase Gate 2 (= Gate 2.3)** | Step 2.3 → Step 3.1 | **CAD Gate** | **PHASE_2 → PHASE_3** | Concept Route: Reviewed → Verified; Pre-CAD Review Report: Draft → Reviewed; MVP CAD Model: Draft → Reviewed |
-| Gate 3.1 | Step 3.1 → Step 3.1.loop | 內部 Gate | Phase 3 內部 | Evidence Matrix, Risk: Draft → Reviewed |
-| Gate 3.2 | Step 3.2 → Step 3.3 | 內部 Gate | Phase 3 內部 | Concept Route: Verified → Baslined; Decision Record: Draft → Reviewed |
-| Phase Gate 3 (= Gate 3.3) | Step 3.3 → Done | 內部 Gate | **PHASE_3 → COMPLETED** | All Core Artifacts: Baslined → Released |
+| Gate | 位置 | Gate 類型 | Phase 轉換？ | 已實作 Checker 邏輯 (`POST /gates/{gate_id}/check`) | 關鍵工件狀態轉換 |
+|------|------|-----------|-------------|-----------------------------------------------------|---------------------|
+| Gate 1.1 | Step 1.1 → Step 1.2 | 內部 Gate | **DRAFT → PHASE_1** | `check_gate_1_1`: TaskDefinition 存在 + mission 已填 + ≥3 critical_metrics 且每個有 method | Constraint: Draft → Reviewed |
+| Gate 1.2 | Step 1.2 → Step 1.3 | 內部 Gate | Phase 1 內部 | `check_gate_1_2`: ≥10 Assumption + ≥3 High/Medium-High 風險假設 + ≥3 Contradiction | Contradiction, Assumption: Draft → Reviewed |
+| Phase Gate 1 (= Gate 1.3) | Step 1.3 → Step 2.1 | 內部 Gate | **PHASE_1 → PHASE_2** | `check_gate_1_3`: ≥1 CausalLoop + ≥3 Breakpoint + 所有 Contradiction 已分類 (contradiction_types 非空) | Contradiction: Reviewed → Verified; Breakpoint: Draft → Reviewed |
+| Gate 2.1 | Step 2.1 → Step 2.2 | 內部 Gate | Phase 2 內部 | `check_gate_2_1`: ≥3 High/Medium-High Assumption + 每個有對應 Experiment (assumption_id 關聯) | Assumption: Reviewed → Verified; Disproved 假設已處置 |
+| **Gate 2.2** | Step 2.2 → Step 2.3 | **Pre-CAD Gate** | Phase 2 內部 | `check_gate_2_2`: ≥3 Alternative (status in must_pass/selected/backup) + 每條有完整方案規格 (mechanism+assumptions+risks) | Concept Route: Draft → Reviewed |
+| **Phase Gate 2 (= Gate 2.3)** | Step 2.3 → Step 3.1 | **CAD Gate** | **PHASE_2 → PHASE_3** | `check_gate_2_3`: ≥3 selected Alternative 有 robust_scores + ≥1 PreCadReview.overall_pass=True | Concept Route: Reviewed → Verified; Pre-CAD Review Report: Draft → Reviewed |
+| Gate 3.2 | Step 3.2 → Step 3.3 | 內部 Gate | Phase 3 內部 | `check_gate_3_2`: DecisionRecord 已建立已簽核 + 所有 WANT 評分有證據 + 所有 H/H* Risk 有緩解措施 | Concept Route: Verified → Baslined; Decision Record: Draft → Reviewed |
+| Phase Gate 3 (= Gate 3.3) | Step 3.3 → Done | 內部 Gate | **PHASE_3 → COMPLETED** | `check_gate_3_3`: DecisionRecord 已簽核 + 所有 H/H* Risk 有緩解措施 + action_items 非空 | All Core Artifacts: Baslined → Released |
 ## 雙層狀態機概念圖 (Process State + Artifact State)
 
 ```mermaid
-stateDiagram-v2
-    direction LR
+graph TB
+    subgraph Process3_1["Process: Step 3.1 設計審查"]
+        subgraph EM_Artifact["Artifact: Evidence Matrix"]
+            EM_Draft["Draft"] -->|"填寫 EM"| EM_Reviewed["Reviewed"]
+            EM_Reviewed -->|"證據補齊"| EM_Verified["Verified"]
+            EM_Verified -.->|"發現新缺口"| EM_Reviewed
+        end
+        subgraph CR_Artifact["Artifact: Concept Route"]
+            CR_Reviewed["Reviewed"] -->|"證據充足"| CR_Verified["Verified"]
+        end
+        subgraph Risk_Artifact["Artifact: Risk"]
+            Risk_Draft["Draft"] -->|"風險登錄"| Risk_Reviewed["Reviewed"]
+        end
+        subgraph MVP_CAD["Artifact: MVP CAD Model"]
+            CAD_Draft["Draft"] -->|"繪製 MVP CAD"| CAD_Reviewed["Reviewed"]
+        end
+    end
 
-    state "Process: Step 3.1 (CAD Gate - 設計審查)" as Process3_1 {
-        state "Artifact: EM (Evidence Matrix)" as EM_Artifact {
-            state "Draft" as EM_Draft
-            state "Reviewed" as EM_Reviewed
-            state "Verified" as EM_Verified
-            EM_Draft --> EM_Reviewed : 填寫 EM
-            EM_Reviewed --> EM_Verified : 證據補齊 (S3_1_loop)
-            EM_Verified --> EM_Reviewed : 發現新缺口
-        }
-        state "Artifact: Concept Route" as CR_Artifact {
-            state "Reviewed" as CR_Reviewed
-            state "Verified" as CR_Verified
-            CR_Reviewed --> CR_Verified : 證據充足 (S3_1_loop Loop Completed)
-        }
-        state "Artifact: Risk" as Risk_Artifact {
-            state "Draft" as Risk_Draft
-            state "Reviewed" as Risk_Reviewed
-            Risk_Draft --> Risk_Reviewed : 風險登錄
-        }
-        state "Artifact: MVP CAD Model" as MVP_CAD_Artifact {
-            state "Draft" as MVP_CAD_Draft
-            state "Reviewed" as MVP_CAD_Reviewed
-            MVP_CAD_Draft --> MVP_CAD_Reviewed : 繪製 MVP CAD
-        }
-    }
+    subgraph Process3_1_loop["Process: Step 3.1.loop 證據補齊"]
+        subgraph Evid_Artifact["Artifact: Evidence"]
+            Evid_Draft["Draft"] -->|"執行最小實驗"| Evid_Verified["Verified"]
+        end
+    end
 
-    state "Process: Step 3.1.loop (證據補齊)" as Process3_1_loop {
-        state "Artifact: Evidence" as Evid_Artifact {
-            state "Draft" as Evid_Draft
-            state "Verified" as Evid_Verified
-            Evid_Draft --> Evid_Verified : 執行最小實驗
-        }
-    }
+    subgraph Process3_2["Process: Step 3.2 決策與行動"]
+        subgraph DR_Artifact["Artifact: Decision Record"]
+            DR_Draft["Draft"] -->|"完成 KT Decision"| DR_Reviewed["Reviewed"]
+        end
+    end
 
-    state "Process: Step 3.2 (決策與行動)" as Process3_2 {
-        state "Artifact: Decision Record" as DR_Artifact {
-            state "Draft" as DR_Draft
-            state "Reviewed" as DR_Reviewed
-            DR_Draft --> DR_Reviewed : 完成 KT Decision
-        }
-    }
-
-    Process3_1 --> Process3_1_loop : 發現證據缺口
-    Process3_1_loop --> Process3_1 : 證據更新
-    Process3_1 --> Process3_2 : Phase Gate 2 ✓ (證據充足)
+    Process3_1 -.->|"發現證據缺口"| Process3_1_loop
+    Process3_1_loop -.->|"證據更新"| Process3_1
+    Process3_1 -->|"Phase Gate 2 通過"| Process3_2
 ```
 
 ### 平行處理說明
@@ -261,8 +230,10 @@ flowchart LR
     - 決策保留 3-5 條架構級差異顯著的 Concept Route。
 - **AI (Copilot) R&R**:
     - 提供 Pre-CAD 審查表模板。
+    - **5 維度自動化評分** (`POST /pre-cad-reviews`)：建立 `PreCadReview` 記錄，含 space/cost/safety/decoupling/supply 各 1-5 分 + 備註，系統自動計算 `overall_pass = all(score >= 3)`。
+    - **AI 深度分析** (`POST /pre-cad-reviews/{id}/ai-analyze`)：使用 `pre_cad_review.md` prompt，輸入方案機制/穩健性評分/專案背景，產出 5 維度分析 + showstoppers 清單，結果寫入 `ai_analysis` 欄位。
     - 協助分析和匯總審查結果。
-- **Phase Gate 2 (= Gate 2.3) 前提**: 經 Pre-CAD 審查，候選 Concept Route 已收斂至 3–5 條。每條保留路線的 Interface Contract 已更新。每條保留路線都明確了下一步進行 MVP CAD 的最小幾何範圍。**核心工件 Concept Route 狀態: Reviewed → Verified (通過 Pre-CAD Gate)；Pre-CAD Review Report 狀態: Draft → Reviewed**。
+- **Phase Gate 2 (= Gate 2.3) 前提**: 經 Pre-CAD 審查，候選 Concept Route 已收斂至 3–5 條。**`check_gate_2_3` 檢查：≥3 條 selected Alternative 有 robust_scores + ≥1 PreCadReview.overall_pass=True**。每條保留路線的 Interface Contract 已更新。每條保留路線都明確了下一步進行 MVP CAD 的最小幾何範圍。**核心工件 Concept Route 狀態: Reviewed → Verified (通過 Pre-CAD Gate)；Pre-CAD Review Report 狀態: Draft → Reviewed**。
 
 #### Step 3.1: 設計審查 (CAD Gate - MVP CAD Review)
 - **目的**: 針對通過 Pre-CAD Gate 的候選方案，進行 MVP CAD 的初步審查，利用有限的 CAD/模擬成果快速識別潛在的設計缺陷、製造困難或整合問題，並將「證據缺口」轉化為下一步的最小實驗。此階段即為 **CAD Gate (Phase Gate 2)**。
@@ -273,6 +244,7 @@ flowchart LR
     - 進行黑帽質疑。
     - 建立風險登錄表，指派 Owner、定義緩解措施和監控指標。
 - **AI (Copilot) R&R**:
+    - **證據矩陣聚合** (`GET /experiments/evidence-matrix`)：自動聚合每個 Assumption 的關聯 Experiment 和最佳 evidence_level (E0-E4)，回傳 matrix 含 assumption_code/risk_level/best_evidence_level/experiment_count。UI 以紅(E0/E1)/黃(E2)/綠(E3/E4) 標示缺口。
     - 提供 DR EM 模板，協助追蹤證據狀態。
     - 提供 SWOT 分析框架和黑帽質疑清單。
     - 協助整理風險登錄表，並進行歷史失效案例比對 (Failure Mode Transfer)。
@@ -301,7 +273,10 @@ flowchart LR
     - 提供標準 WANT 條件及評分標準模板。
     - 協助整理風險矩陣與風險評估表。
     - 提供最小實驗規格模板。
-- **Gate 3.2**: 所有方案經 Step 2.2.6 MUST 篩選。每個 WANT 評分都有證據支撐。所有 H 風險都有緩解措施。KT 決策記錄完整且已簽核。**核心工件 Concept Route 狀態: Verified → Baslined；Decision Record 狀態: Draft → Reviewed**。
+- **AI (Copilot) 新增 R&R**:
+    - **WANT 標準模板** (`POST /want/criteria/seed`)：一鍵建立 W1-W6 標準條件（性能餘裕 w=10、製造可行性 w=8、成本競爭力 w=7、開發時程 w=6、解耦程度 w=8、驗證難度 w=5），含 score_10/score_6/score_2 描述 + evidence_type。冪等保護（已有條件時回 409）。
+    - 提供 KT 決策流程模板 (WANT/AC)。
+- **Gate 3.2**: `check_gate_3_2` 檢查：DecisionRecord 已建立已簽核 + 所有 WANT 評分有證據支撐 + 所有 H/H* Risk 有緩解措施。**核心工件 Concept Route 狀態: Verified → Baslined；Decision Record 狀態: Draft → Reviewed**。
 
 #### Step 3.3: 內化與傳達（費曼）
 - **目的**: 將決策結果有效傳達給不同層級的利害關係人，並促進知識內化。
