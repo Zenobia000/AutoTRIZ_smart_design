@@ -1,7 +1,7 @@
 # Pre-CAD Review Report Template
 
 ## 說明
-此模板用於 RD Design Copilot 流程中 Gate 2.2 (Pre-CAD Gate) 的審查。其目的在於發想階段利用「可驗證的最小資訊」篩選和縮減候選設計方案，並在投入大量 CAD 繪製和詳細模擬之前，淘汰不具可行性的方案。
+此模板用於 RD Design Copilot 流程中 Step 2.3 Pre-CAD 審查（Phase Gate 2 = Gate 2.3）的審查。其目的在於發想階段利用「可驗證的最小資訊」篩選和縮減候選設計方案，並在投入大量 CAD 繪製和詳細模擬之前，淘汰不具可行性的方案。
 
 ## Pre-CAD 審查表
 
@@ -47,6 +47,6 @@
 
 ---
 
-**版本**: v1.0
-**最後更新**: 2026-02-24
-**適用範圍**: RD Design Copilot Gate 2.2 (Pre-CAD Gate)
+**版本**: v1.1
+**最後更新**: 2026-02-25
+**適用範圍**: RD Design Copilot Step 2.3 Pre-CAD 審查 (Phase Gate 2 = Gate 2.3)

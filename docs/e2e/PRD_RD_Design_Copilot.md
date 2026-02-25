@@ -11,9 +11,9 @@
 | **版本** | v1.0 |
 | **文件狀態** | Draft |
 | **建立日期** | 2026-02-01 |
-| **最後更新** | 2026-02-01 |
+| **最後更新** | 2026-02-25 |
 | **文件擁有者** | [PM 姓名] |
-| **相關文件** | RD_Design_Copilot_整合流程.md, KT_Robust_決策框架.md |
+| **相關文件** | RD_Design_Copilot_整合流程.md, KT_Robust_決策框架.md, RD_Design_Copilot_State_Machine.md, AI_Agent_Architecture.md, Naming_Convention.md |
 
 ---
 
@@ -194,32 +194,42 @@
 |---------|---------|--------|------|
 | **F1.1** | 任務定義表生成 | P0 | 基於需求輸入，生成結構化任務定義表（Mission/Hard/Soft/Non-goals） |
 | **F1.2** | 索克拉底問答 | P0 | 自動產出 6 類提問（澄清/假設/證據/觀點/後果/反思） |
-| **F1.3** | 矛盾識別 | P0 | 從對話中識別「改善 A 惡化 B」的矛盾，輸出 TRIZ 句式 |
-| **F1.4** | 因果迴路圖生成 | P1 | 自動繪製熱-機-振耦合關係圖，標示斷路點 |
-| **F1.5** | Gate 1.1 檢查 | P0 | 驗證「三個最不能失敗指標」是否被定義 |
+| **F1.3** | 矛盾識別 | P0 | 從對話中識別「改善 A 惡化 B」的矛盾，輸出 TRIZ 句式（含分類標籤） |
+| **F1.4** | 因果迴路圖生成 | P0 | 自動繪製熱-機-振耦合關係圖，標示斷路點 |
+| **F1.5** | Gate 1.1 檢查 | P0 | 驗證任務定義含 mission + ≥3 critical_metrics 且每項有 method |
+| **F1.6** | Gate 1.2 檢查 | P0 | 驗證 ≥10 Assumption + ≥3 高風險 + ≥3 Contradiction |
+| **F1.7** | Phase Gate 1 (Gate 1.3) | P0 | 驗證 ≥1 CausalLoop + ≥3 Breakpoint + 所有 Contradiction 已分類 |
 
 #### Phase 2: Diverge — 假設與發散
 
 | 功能編號 | 功能名稱 | 優先級 | 描述 |
 |---------|---------|--------|------|
-| **F2.1** | 假設台帳管理 | P0 | 建立/更新/追蹤假設（6 欄：內容/依據/後果/驗證/成本/週期） |
-| **F2.2** | TRIZ 解法生成 | P0 | 基於矛盾句，輸出採用原理 + 工程對映 + 代價 + 最小實驗 |
-| **F2.3** | SCAMPER 變形 | P0 | 對每個子系統執行 SCAMPER，輸出 7 欄結構化結果 |
-| **F2.4** | 方案集合管理 | P0 | 管理 3-5 條架構級路線，每條含機制+假設+風險+驗證 |
-| **F2.5** | MUST 快篩 | P0 | 基於 MUST 條件做 Go/No-Go 淘汰 |
-| **F2.6** | Gate 2.1 檢查 | P0 | 驗證至少 3 條架構級路線通過 MUST |
+| **F2.1** | 假設台帳管理 | P0 | 建立/更新/追蹤假設（含 PDCA 狀態閉環：Open→Experimenting→Validated/Refuted） |
+| **F2.2** | 未知集合 (U) 管理 | P0 | 識別/追蹤未知因子，可關聯至 Assumption（assumption_refs） |
+| **F2.3** | Gate 2.1 檢查 | P0 | 驗證每個高風險假設有對應 Experiment |
+| **F2.4** | Anti-Anchor Sprint | P0 | 強制打破路徑依賴，產出 ≥1 非對標方案 |
+| **F2.5** | TRIZ 統一求解 | P0 | 三路徑統一：矩陣查表 + 分離原則 + 76 標準解，輸出合併排序結果 |
+| **F2.6** | 子系統建議 | P0 | 根據矛盾自動建議受影響子系統 |
+| **F2.7** | SCAMPER 變形 | P0 | 對每個子系統執行 SCAMPER，新矛盾回饋到矛盾池 |
+| **F2.8** | 方案集合管理 | P0 | 管理 3-5 條架構級路線，每條含 mechanism + assumptions + risks + robust_scores |
+| **F2.9** | MUST 快篩 | P0 | 基於 MUST 條件做 Go/No-Go 淘汰 |
+| **F2.10** | Gate 2.2 檢查 | P0 | 驗證 ≥3 方案通過 MUST 且有完整 mechanism/assumptions/risks |
+| **F2.11** | Pre-CAD 審查 | P0 | 5 維度評分（空間/成本/安全/解耦/供應，1-5 分）+ AI 分析 |
+| **F2.12** | Phase Gate 2 (Gate 2.3) | P0 | 驗證 ≥3 方案有 robust_scores + ≥1 PreCadReview.overall_pass=True |
 
 #### Phase 3: Converge — 收斂與驗證
 
 | 功能編號 | 功能名稱 | 優先級 | 描述 |
 |---------|---------|--------|------|
-| **F3.1** | SWOT 分析 | P1 | 對方案集合做內外部優劣勢分析 |
-| **F3.2** | 風險登錄表 | P0 | 管理風險（描述/機率/衝擊/Owner/緩解/監控） |
-| **F3.3** | KT WANT 評分 | P0 | 基於 7 個 WANT 維度做加權評分，強制附證據 |
-| **F3.4** | Adverse Consequences | P0 | 風險矩陣評估（機率×嚴重度） |
-| **F3.5** | KT 決策記錄生成 | P0 | 生成結構化決策記錄（MUST/WANT/AC/決策/行動/簽核） |
-| **F3.6** | 最小實驗設計 | P0 | 為 Top 3 假設設計驗證實驗 |
-| **F3.7** | Phase Gate 3 檢查 | P0 | 驗證 KT 記錄完整、WANT 有證據、H 風險有緩解 |
+| **F3.1** | 證據矩陣 | P0 | 聚合 Assumption × Experiment，顯示最佳 evidence_level (E0-E4) |
+| **F3.2** | 風險登錄表 | P0 | 管理風險（描述/機率/衝擊/Owner/緩解），P×S 自動計算 risk level |
+| **F3.3** | 最小實驗設計 | P0 | 為高風險假設設計驗證實驗，含 evidence_level 追蹤 |
+| **F3.4** | WANT 標準模板 | P0 | 一鍵載入 W1-W6 標準模板（性能餘裕/製造可行性/成本/時程/解耦/驗證難度） |
+| **F3.5** | KT WANT 評分 | P0 | 加權評分（weighted_score 自動計算），強制附證據 |
+| **F3.6** | Adverse Consequences | P0 | 風險矩陣評估（機率×嚴重度） |
+| **F3.7** | KT 決策記錄生成 | P0 | 生成結構化決策記錄（MUST/WANT/AC/決策/行動/簽核） |
+| **F3.8** | Gate 3.2 檢查 | P0 | 驗證 DecisionRecord 已簽核（signed_by 非空） |
+| **F3.9** | Phase Gate 3 (Gate 3.3) | P0 | 驗證 DecisionRecord 簽核 + 所有 H/H* 風險有 mitigation + action_items 非空 |
 
 #### 溝通與沉澱
 
@@ -702,6 +712,11 @@ KT_決策記錄:
 | **Set-Based Design** | 保留多條路線並行發展，延遲收斂 |
 | **假設台帳** | 追蹤設計假設的結構化文件 |
 | **最小實驗** | 用最少成本驗證最關鍵假設的實驗 |
+| **Pre-CAD 審查** | 投入 CAD 前的 5 維度可行性快篩（空間/成本/安全/解耦/供應） |
+| **證據矩陣** | Assumption × Experiment 聚合表，追蹤 evidence_level (E0-E4) |
+| **Anti-Anchor Sprint** | 強制打破路徑依賴的發散活動 |
+| **Gate** | 流程閘門，自動檢查工件完整性後決定是否放行 |
+| **Phase Gate** | 階段閘門，觸發 Phase 轉換的里程碑檢查 |
 
 ### 附錄 B: 相關文件
 
@@ -709,6 +724,12 @@ KT_決策記錄:
 |---------|------|
 | RD_Design_Copilot_整合流程.md | 方法論詳細說明 |
 | KT_Robust_決策框架.md | KT 決策框架詳細規格 |
+| RD_Design_Copilot_State_Machine.md | 8-Gate 狀態機與 AI R&R 定義 |
+| AI_Agent_Architecture.md | AI Agent 架構與 Prompt 設計 |
+| Naming_Convention.md | Phase/Step/Gate 命名規範 |
+| Evidence_Matrix_Risk_Register_Template.md | 證據矩陣與風險登錄表模板 |
+| Pre_CAD_Review_Template.md | Pre-CAD 審查模板 |
+| MUST_Rulebook_Template.md | MUST 規則書模板 |
 | 簡報內容_詳細說明.md | 簡報內容參考 |
 
 ### 附錄 C: 變更記錄
@@ -716,6 +737,7 @@ KT_決策記錄:
 | 版本 | 日期 | 變更內容 | 作者 |
 |------|------|---------|------|
 | 0.1 | 2026-02-01 | 初版建立 | [作者] |
+| 0.2 | 2026-02-25 | 功能清單對齊實作：8-Gate 系統、Pre-CAD 審查、證據矩陣、WANT 標準模板、Anti-Anchor Sprint、假設 PDCA、TRIZ 統一求解、SCAMPER 矛盾回饋 | AI-assisted |
 
 ---
 

@@ -1,6 +1,6 @@
 # RD Design Copilot 命名規範 (Naming Convention)
 
-> **版本**: v1.0 | **日期**: 2026-02-25
+> **版本**: v1.1 | **日期**: 2026-02-25
 > **目的**: 統一流程節點（Phase / Step / Gate / Activity）的命名規則與階層關係，確保 UX 一致性與可預測性。
 
 ---
@@ -205,16 +205,19 @@ VALID_STATUSES = ["DRAFT", "PHASE_1", "PHASE_2", "PHASE_3", "COMPLETED"]
 ### 6.2 Gate 編號 (程式碼中)
 
 ```python
-# gate_number 使用點記法的扁平化整數表示
-# Gate 1.1 → gate_number = 11
-# Gate 1.2 → gate_number = 12
-# Phase Gate 1 (Gate 1.3) → gate_number = 13
-# Gate 2.1 → gate_number = 21
-# Gate 2.2 → gate_number = 22
-# Phase Gate 2 (Gate 2.3) → gate_number = 23
-# Gate 3.1 → gate_number = 31
-# Gate 3.2 → gate_number = 32
-# Phase Gate 3 (Gate 3.3) → gate_number = 33
+# gate_id 使用字串點記法表示（與 UI / 文件一致）
+# DB: GateCheck.gate_id = String(10)
+# API: GET /projects/{pid}/gates/{gate_id}/check
+VALID_GATES = {
+    "1.1",   # Gate 1.1 — Step Gate
+    "1.2",   # Gate 1.2 — Step Gate
+    "1.3",   # Phase Gate 1
+    "2.1",   # Gate 2.1 — Step Gate
+    "2.2",   # Gate 2.2 — Step Gate
+    "2.3",   # Phase Gate 2
+    "3.2",   # Gate 3.2 — Step Gate
+    "3.3",   # Phase Gate 3
+}
 ```
 
 ### 6.3 Step 編號 (程式碼中)
@@ -230,6 +233,6 @@ VALID_STEPS = [
 
 ---
 
-**版本**: v1.0
+**版本**: v1.1
 **最後更新**: 2026-02-25
 **適用範圍**: RD Design Copilot 所有文件、程式碼、UI
