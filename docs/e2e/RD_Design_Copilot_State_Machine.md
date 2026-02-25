@@ -6,6 +6,7 @@
 > **v1.2 更新**：Step 編號已按實際執行順序重新編排，引入雙層狀態機概念，並加入 `Step 3.1.loop: 證據補齊 (Evidence Closure)` 迴圈。
 > **v1.3 更新**：Step 2.2.2 TRIZ 解矛盾升級為三路徑統一求解（`POST /triz/solve`），分類(LLM) → TC/PC/SF 路由 → 規則引擎查表 + LLM 具體化，回傳 `UnifiedTrizResult`。
 > **v1.4 更新**：新增 Step 2.1 ↔ Step 2.2 假設推翻迭代迴路。Step 2.1 AI R&R 新增「假設推翻影響分析」（`POST /assumptions/{id}/disprove`）。Gate 2.1 檢查點新增 Disproved 假設處置要求。未知集合 (U) 與假設透過 `assumption_refs` 結構化關聯。
+> **v1.5 更新**：Step 2.2 AI R&R 新增三項已實作能力：(1) Anti-Anchor Sprint 端點 (`POST /alternatives/anti-anchor`)，(2) SCAMPER 新矛盾回饋迴路 (`POST /scamper/feedback-contradictions` + `new_contradictions` 欄位)，(3) 子系統智慧建議 (`GET /scamper/subsystem-suggestions`，從斷路點+TRIZ 解法自動提取)。
 
 ## Step 編號對照
 
@@ -237,15 +238,16 @@ flowchart LR
     - 審查 AI 生成的解法方向、SCAMPER 變形及完整方案。
     - 定義 MUST 條件並執行 Go/No-Go 判定。
 - **AI (Copilot) R&R**:
-    - **2.2.1 Anti-Anchor Sprint**: 引導產生非典型架構概念。
+    - **2.2.1 Anti-Anchor Sprint** (`POST /alternatives/anti-anchor`): 產生 3 個非典型架構概念（至少 1 個與主流不相容），存為 Alternative (status=`anti_anchor`)。輸入：矛盾列表 + 斷路點 + 約束 + 現有 TRIZ 解法（作為排除參考）。
     - **2.2.2 TRIZ 統一求解** (`POST /triz/solve`): 對每條矛盾執行三路徑統一求解：
         - **分類** (LLM): 判定矛盾類型 TC/PC/SF（可複選）
         - **Path A 技術矛盾**: 參數映射 (LLM+KB) → 矩陣查表 (規則引擎) → 原理具體化 (LLM+KB)
         - **Path B 物理矛盾**: 注入 4 大分離原則 KB → 策略選擇 (LLM)
         - **Path C Su-Field**: 狀態分類 → 標準解匹配 (規則引擎) → 具體化 (LLM+KB)
         - 回傳 `UnifiedTrizResult`（含三路徑解法 + 矩陣查表軌跡 + 參數映射軌跡）
-    - **2.2.3 子系統定義**: 識別受影響子系統。
-    - **2.2.4 SCAMPER 模組變形**: 對每個子系統執行 SCAMPER 動作。
+    - **2.2.3 子系統定義** (`GET /scamper/subsystem-suggestions`): 從斷路點 (`Breakpoint.location`) + TRIZ 解法 (`TrizSolution.engineering_mappings`) 自動提取子系統建議清單（純規則，零 LLM 成本），RD 可從建議中選取或自訂。
+    - **2.2.4 SCAMPER 模組變形**: 對每個子系統執行 SCAMPER 動作。變形結果含 `new_contradictions` 欄位——若變形引發新技術矛盾（改善 X 惡化 Y），自動記錄。
+    - **SCAMPER 新矛盾回饋** (`POST /scamper/feedback-contradictions`): 掃描所有 SCAMPER 變形的 `new_contradictions`，去重後自動建立 Contradiction 記錄 (source=`SCAMPER 發現`)，閉合 SCAMPER → 矛盾列表回饋迴路。
     - **2.2.5 AI 方案生成**: 整合 TRIZ 解法 + SCAMPER 變形，生成完整方案規格 (含 Interface Contract)。
     - **2.2.6 MUST 快篩**: 對候選方案逐項檢查 MUST 條件，不通過者淘汰。
 - **平行處理**: 不同矛盾句的 TRIZ 統一求解、不同子系統的 SCAMPER 變形可並行執行。
