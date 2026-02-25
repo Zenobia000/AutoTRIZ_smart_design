@@ -386,7 +386,21 @@ elif page == "Step 2.1 - 假設台帳":
 
     assumptions = api.list_assumptions(pid)
 
-    with st.expander("新增假設", expanded=not assumptions):
+    # AI batch extraction
+    st.subheader("AI 萃取假設")
+    st.caption("從任務定義、問答記錄、矛盾、斷路點、因果迴路等上游工件，批次萃取隱含假設。已有的手動假設不會被覆蓋。")
+    if st.button("AI 萃取假設", type="secondary"):
+        with st.spinner("正在分析上游工件並萃取假設..."):
+            try:
+                result = api.extract_assumptions(pid)
+                st.success(f"已萃取 {result['extracted_count']} 個假設")
+                st.rerun()
+            except Exception as e:
+                st.error(f"萃取失敗：{e}")
+
+    st.divider()
+
+    with st.expander("手動新增假設", expanded=not assumptions):
         cols = st.columns([1, 2])
         a_code = cols[0].text_input("編號", value=f"A-{len(assumptions)+1:03d}")
         a_type = cols[1].selectbox("假設類型", ASSUMPTION_TYPES, key="new_a_type")
@@ -449,6 +463,10 @@ elif page == "Step 2.1 - 假設台帳":
                     st.markdown(f"**驗收/判定標準**：\n{a['acceptance_criteria']}")
                 if a.get("due_date"):
                     st.write(f"**目標完成**：{a['due_date']}")
+                if a.get("source_refs"):
+                    refs = a["source_refs"]
+                    tags = " ".join(f"`{r.get('type', '')}:{r.get('code', '')}`" for r in refs)
+                    st.markdown(f"**來源追溯**：{tags}")
 
                 # Edit status
                 st.divider()
@@ -463,6 +481,27 @@ elif page == "Step 2.1 - 假設台帳":
                     api.update_assumption(pid, a["id"], {"status": new_status, "risk_level": new_risk})
                     st.rerun()
 
+                # Disprove section
+                if a.get("status") == "Disproved":
+                    st.error(f"已推翻：{a.get('disproved_reason', '')}")
+                    if a.get("disproved_at"):
+                        st.caption(f"推翻時間：{a['disproved_at']}")
+                elif a.get("status") not in ("Disproved",):
+                    with st.popover("標記為推翻", use_container_width=False):
+                        dreason = st.text_area("推翻原因", key=f"dreason_{a['id']}", placeholder="說明為什麼此假設不成立...")
+                        if st.button("確認推翻", key=f"disprove_{a['id']}") and dreason:
+                            try:
+                                result = api.disprove_assumption(pid, a["id"], dreason)
+                                if result.get("impact_analysis"):
+                                    st.warning(f"受影響工件：{len(result['impact_analysis'])} 個")
+                                    for item in result["impact_analysis"]:
+                                        st.write(f"- {item['type']}: {item['code']} — {item['description']}")
+                                    for action in result.get("recommended_actions", []):
+                                        st.info(f"建議：{action}")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"操作失敗：{e}")
+
 
 # --- Step 2.1: Unknown Factors ---
 elif page == "Step 2.1 - 未知集合 (U)":
@@ -472,6 +511,8 @@ elif page == "Step 2.1 - 未知集合 (U)":
     CATEGORIES = ["環境", "使用者行為", "製程", "材料", "供應", "介面", "其他"]
 
     factors = api.list_unknown_factors(pid)
+    assumptions = api.list_assumptions(pid)
+    assumption_options = {f"{a['code']}: {a['content'][:40]}": a for a in assumptions}
 
     with st.expander("新增未知因子", expanded=not factors):
         cols = st.columns([1, 2, 1])
@@ -484,14 +525,18 @@ elif page == "Step 2.1 - 未知集合 (U)":
         uf_range = cols2[1].text_input("連續範圍描述", key="uf_range", placeholder="-20°C ~ +55°C")
 
         uf_impact = st.text_input("影響指標", key="uf_impact", placeholder="例如：溫升, 壽命, NVH")
-        uf_related = st.text_input("關聯假設", key="uf_related", placeholder="例如：A-001, A-003")
+        selected_assumptions = st.multiselect("關聯假設", list(assumption_options.keys()), key="uf_refs")
+        uf_assumption_refs = [
+            {"assumption_id": assumption_options[s]["id"], "code": assumption_options[s]["code"]}
+            for s in selected_assumptions
+        ]
 
         if st.button("新增未知因子", type="primary") and uf_name:
             levels = [l.strip() for l in uf_levels.split(",") if l.strip()] if uf_levels else []
             api.create_unknown_factor(pid, {
                 "code": uf_code, "name": uf_name, "category": uf_cat,
                 "levels": levels, "range_desc": uf_range,
-                "impact_on": uf_impact, "related_assumptions": uf_related,
+                "impact_on": uf_impact, "assumption_refs": uf_assumption_refs,
             })
             st.rerun()
 
@@ -517,15 +562,25 @@ elif page == "Step 2.1 - 未知集合 (U)":
                 cols[2].write(f"**範圍**：{f.get('range_desc', '')}")
 
                 st.write(f"**影響指標**：{f.get('impact_on', '')}")
-                st.write(f"**關聯假設**：{f.get('related_assumptions', '')}")
+                if f.get("assumption_refs"):
+                    tags = " ".join(f"`{r.get('code', '')}`" for r in f["assumption_refs"])
+                    st.markdown(f"**關聯假設**：{tags}")
 
                 # Edit
                 st.divider()
                 ecols = st.columns([2, 2, 1])
                 new_impact = ecols[0].text_input("更新影響指標", value=f.get("impact_on", ""), key=f"ufi_{f['id']}")
-                new_related = ecols[1].text_input("更新關聯假設", value=f.get("related_assumptions", ""), key=f"ufr_{f['id']}")
+                # Build current selection for multiselect
+                current_codes = {r.get("code") for r in (f.get("assumption_refs") or [])}
+                current_selected = [k for k, v in assumption_options.items() if v["code"] in current_codes]
+                new_selected = ecols[1].multiselect("更新關聯假設", list(assumption_options.keys()),
+                    default=current_selected, key=f"ufr_{f['id']}")
+                new_refs = [
+                    {"assumption_id": assumption_options[s]["id"], "code": assumption_options[s]["code"]}
+                    for s in new_selected
+                ]
                 if ecols[2].button("更新", key=f"ufu_{f['id']}"):
-                    api.update_unknown_factor(pid, f["id"], {"impact_on": new_impact, "related_assumptions": new_related})
+                    api.update_unknown_factor(pid, f["id"], {"impact_on": new_impact, "assumption_refs": new_refs})
                     st.rerun()
 
                 if st.button("刪除", key=f"ufd_{f['id']}"):

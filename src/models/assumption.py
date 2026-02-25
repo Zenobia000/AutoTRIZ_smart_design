@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import String, Text, DateTime, ForeignKey
+from sqlalchemy import String, Text, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database import Base
@@ -24,5 +24,8 @@ class Assumption(Base):
     owner: Mapped[str] = mapped_column(String(100), default="")
     due_date: Mapped[str] = mapped_column(String(50), default="")  # e.g. "Gate 1.2 前", "Phase Gate 1 前"
     status: Mapped[str] = mapped_column(String(20), default="Open")  # Open/Planned/Verifying/Verified/Disproved
+    source_refs: Mapped[dict] = mapped_column(JSON, default=list)  # [{"type": "contradiction", "code": "C1", "id": "uuid"}, ...]
+    disproved_reason: Mapped[str] = mapped_column(Text, default="")
+    disproved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

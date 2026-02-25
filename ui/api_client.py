@@ -120,6 +120,14 @@ def create_assumption(pid: str, data: dict):
 def update_assumption(pid: str, aid: str, data: dict):
     return _handle(httpx.put(_url(f"/projects/{pid}/assumptions/{aid}"), json=data, timeout=TIMEOUT))
 
+def extract_assumptions(pid: str):
+    return _handle(httpx.post(_url(f"/projects/{pid}/assumptions/extract"), timeout=TIMEOUT))
+
+def disprove_assumption(pid: str, aid: str, reason: str):
+    return _handle(httpx.post(
+        _url(f"/projects/{pid}/assumptions/{aid}/disprove"),
+        json={"reason": reason}, timeout=TIMEOUT))
+
 
 # --- TRIZ ---
 def list_triz(pid: str):

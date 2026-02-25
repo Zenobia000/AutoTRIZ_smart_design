@@ -11,7 +11,7 @@ class UnknownFactorCreate(BaseModel):
     levels: list = []
     range_desc: str = ""
     impact_on: str = ""
-    related_assumptions: str = ""
+    assumption_refs: list[dict] = []  # [{"assumption_id": "uuid", "code": "A-001"}]
 
 
 class UnknownFactorUpdate(BaseModel):
@@ -20,7 +20,7 @@ class UnknownFactorUpdate(BaseModel):
     levels: Optional[list] = None
     range_desc: Optional[str] = None
     impact_on: Optional[str] = None
-    related_assumptions: Optional[str] = None
+    assumption_refs: Optional[list[dict]] = None
 
 
 class UnknownFactorResponse(BaseModel):
@@ -32,7 +32,7 @@ class UnknownFactorResponse(BaseModel):
     levels: list
     range_desc: str
     impact_on: str
-    related_assumptions: str
+    assumption_refs: list[dict] = []
     created_at: datetime
 
     model_config = {"from_attributes": True}

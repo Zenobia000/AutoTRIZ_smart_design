@@ -1,9 +1,10 @@
 # AI Agent 架構設計：RD Design Copilot E2E 自動化
 
-> **版本**：v1.2 | **日期**：2026-02-25
+> **版本**：v1.3 | **日期**：2026-02-25
 > **目的**：從 AI Agent 角度重新梳理 E2E 流程，定義自動化等級與多代理協作機制，重點解決 RD 路徑依賴問題。
-> **對齊依據**：`RD_Design_Copilot_整合流程.md` v1.6 + `RD_Design_Copilot_State_Machine.md` v1.3
+> **對齊依據**：`RD_Design_Copilot_整合流程.md` v1.7 + `RD_Design_Copilot_State_Machine.md` v1.4
 > **v1.2 更新**：TRIZ Solver Agent 升級為三路徑統一求解架構，反映已實作的 `triz_engine.py` 規則引擎 + `triz_solve_service.py` orchestrator + 5 個 Prompt 模板。
+> **v1.3 更新**：Analyst Agent 新增假設推翻影響分析能力（`POST /assumptions/{id}/disprove` + `source_refs` 反查 + impact_analysis）。Step 2.1 R&R 新增 PDCA 迭代迴路（Step 2.2 → Step 2.1 回流）。未知集合 (U) 與假設透過 `assumption_refs` 結構化關聯。
 
 ---
 
@@ -13,7 +14,7 @@
 
 | Agent | 職責 | 核心能力 | 綁定工具 |
 |-------|------|---------|---------|
-| **Analyst Agent** | 需求解構、索克拉底問答、因果迴路建模、矛盾識別、假設質疑 | 語意理解、結構化拆解、隱含假設偵測 | LLM、Prompt Template、Functional Model Generator |
+| **Analyst Agent** | 需求解構、索克拉底問答、因果迴路建模、矛盾識別、假設質疑、**假設推翻影響分析 (PDCA)**、**假設批次萃取** | 語意理解、結構化拆解、隱含假設偵測、**source_refs 反查受影響工件**、**impact_analysis + recommended_actions 生成** | LLM、Prompt Template、Functional Model Generator、**Assumption Disprove API** |
 | **TRIZ Solver Agent** | AutoTRIZ 三路徑統一求解 (`POST /triz/solve`) + SCAMPER 變形 | 矛盾分類 (LLM)、參數映射 (LLM+KB)、矩陣查表 (規則引擎)、分離原則注入、76 標準解匹配、原理具體化 (LLM+KB) | `triz_engine.py` (規則引擎)、`triz_solve_service.py` (orchestrator)、5 Prompt Templates、LLM、RAG |
 | **Evaluator Agent** | MUST 規則驗證、KT 決策分析、證據品質評分、Gate 判定 | 規則引擎、加權評分、風險評估 | MUST Rulebook、Evidence Matrix、Risk Register、LLM |
 | **Knowledge Agent** | 企業 RAG 檢索、Web 文獻搜尋、跨域類比、知識回寫 | 向量檢索、Web Scraping、文件分類、Citation 生成 | Vector DB、Web Search API、Document Store |
@@ -95,7 +96,7 @@ graph TB
 | **1.1** | **問題界定** (白帽 + 5W1H) | 1 | AI-Assisted | Analyst + Knowledge | 提供原始需求、確認約束句 | 低 | Constraint |
 | **1.2** | **理解全貌** (索克拉底問答) | 1 | **AI-Driven** | Analyst + Knowledge | 參與問答、確認假設與矛盾 | **高** — 慣用架構偏見 | Contradiction, Assumption |
 | **1.3** | **系統建模** (因果迴路 + TRIZ 矛盾 + 斷路點) | 1 | **AI-Driven** | Analyst + TRIZ Solver | 校準矛盾句、確認斷路點 | **高** — 傾向忽略矛盾 | Contradiction, Breakpoint |
-| **2.1** | **假設與驗證規劃** (HDA + 未知集合) | 2 | AI-Assisted | Analyst + Knowledge | 填寫假設台帳、定義未知集合 | 中 | Assumption |
+| **2.1** | **假設與驗證規劃** (HDA + 未知集合 + **PDCA 閉環**) | 2 | **AI-Driven** | Analyst + Knowledge | 填寫假設台帳、定義未知集合、**對 Disproved 假設做處置決策** | 中 | Assumption |
 | **2.2.1** | **Anti-Anchor Sprint** (反路徑依賴) | 2 | **Fully Auto** | Analyst + Knowledge | 審核非典型架構 | **最高** — Anti-Anchor 核心 | — |
 | **2.2.2** | **TRIZ 統一求解** (分類→三路徑路由→具體化, `POST /triz/solve`) | 2 | **Fully Auto** | TRIZ Solver + Knowledge | 僅選擇 | **高** — 解法錨定 | Concept Route (部分) |
 | **2.2.3** | **子系統定義** (受影響子系統識別) | 2 | AI-Driven | Analyst | 確認子系統清單 | 中 | Concept Route (部分) |
@@ -115,7 +116,7 @@ graph TB
 | 1.1 | 定義 Mission / Hard Constraints / Soft Objectives | 改寫約束句、生成缺口問卷 | Analyst Agent |
 | 1.2 | 參與索克拉底問答、識別矛盾 | 固定執行六類提問、匯總矛盾列表 | Analyst Agent |
 | 1.3 | 輔助因果迴路圖、正式化矛盾句 | 協助繪製因果迴路、提供 TRIZ 模板 | Analyst + TRIZ Solver |
-| 2.1 | 填寫假設台帳、定義未知集合 | 提供模板、整理未知因子 | Analyst + Knowledge |
+| 2.1 | 填寫假設台帳、定義未知集合、**對 Disproved 假設做處置決策** | 提供模板、整理未知因子、**假設推翻影響分析 (disprove + source_refs 反查 → impact_analysis)**、**批次萃取假設 (extract)** | Analyst + Knowledge |
 | 2.2 | 定義子系統、審查方案、執行 MUST | Anti-Anchor / TRIZ / SCAMPER / 方案生成 / MUST 快篩 | TRIZ Solver + Analyst + Evaluator |
 | 2.3 | 依 Pre-CAD 模板審查、決策保留路線 | 提供模板、匯總審查結果 | Evaluator |
 | 3.1 | 繪製 MVP CAD、填 DR EM、黑帽質疑 | 提供模板、失效案例比對 | Evaluator + Knowledge |
@@ -403,7 +404,8 @@ analyst_agent:
   llm: claude-sonnet-4-6
   tools:
     - functional_model_generator  # Step 1.3 產出因果迴路圖 + 功能樹
-    - assumption_extractor        # Step 1.2 假設質疑
+    - assumption_extractor        # Step 1.2 假設質疑 + Step 2.1 批次萃取
+    - assumption_disprove_analyzer # Step 2.1 假設推翻影響分析 (POST /assumptions/{id}/disprove)
     - scamper_checklist           # Step 2.2.4 SCAMPER 模板 (交由 TRIZ Solver 執行)
     - anti_anchor_generator       # Step 2.2.1 非典型架構生成
   prompts:

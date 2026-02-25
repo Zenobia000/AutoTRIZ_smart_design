@@ -15,6 +15,7 @@ class AssumptionCreate(BaseModel):
     acceptance_criteria: str = ""
     owner: str = ""
     due_date: str = ""
+    source_refs: list[dict] = []
 
 
 class AssumptionUpdate(BaseModel):
@@ -28,6 +29,7 @@ class AssumptionUpdate(BaseModel):
     owner: Optional[str] = None
     due_date: Optional[str] = None
     status: Optional[str] = None
+    disproved_reason: Optional[str] = None
 
 
 class AssumptionResponse(BaseModel):
@@ -44,7 +46,32 @@ class AssumptionResponse(BaseModel):
     owner: str
     due_date: str
     status: str
+    source_refs: list[dict] = []
+    disproved_reason: str = ""
+    disproved_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class AssumptionExtractResponse(BaseModel):
+    extracted_count: int
+    assumptions: list[AssumptionResponse]
+
+
+class DisproveRequest(BaseModel):
+    reason: str
+
+
+class ImpactItem(BaseModel):
+    type: str        # "contradiction" | "triz_solution" | "alternative"
+    code: str
+    id: str
+    description: str
+
+
+class DisproveResponse(BaseModel):
+    assumption: AssumptionResponse
+    impact_analysis: list[ImpactItem]
+    recommended_actions: list[str]

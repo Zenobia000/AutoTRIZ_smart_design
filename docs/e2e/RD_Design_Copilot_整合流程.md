@@ -244,6 +244,7 @@ graph TD
         S4 --> S5_Main
         S5_Main --> SP_Gate["Pre-CAD Gate (Gate 2.2)"]
         SP_Gate --> S_P
+        S5_Main --"假設推翻<br>(PDCA 迭代)"--> S4
     end
 
     subgraph Phase3 ["Phase 3: Converge (收斂與驗證) (Week 4-8)"]
@@ -459,8 +460,53 @@ flowchart LR
   u5_供應公差: [穩定, 不穩定]
 ```
 
+### 2.1.3 假設 PDCA 閉環
+
+假設被推翻（Disproved）後觸發以下迭代流程：
+
+```
+Assumption Disproved
+    │
+    ├─ 記錄推翻原因 + 時間戳 (POST /assumptions/{id}/disprove)
+    │
+    ├─ 自動影響分析（source_refs 反查）：
+    │   ├─ 受影響的矛盾 (Contradiction)
+    │   ├─ 受影響的 TRIZ 解法 (TrizSolution)
+    │   └─ 受影響的方案 (Alternative / Concept Route)
+    │
+    ├─ 決策分歧（RD 判斷）：
+    │   ├─ (A) 修改設計 → 回 Step 2.2 重新求解受影響矛盾
+    │   ├─ (B) 放寬約束 → 回 Step 1.1 修改 Hard Constraints
+    │   └─ (C) 接受風險 → 升級為 Risk Register 條目 + 緩解措施
+    │
+    └─ 更新工件：
+        ├─ Assumption 狀態 → Disproved（含 disproved_reason + disproved_at）
+        ├─ 受影響 Concept Route → 標記 re-evaluate
+        └─ 知識庫回寫（Lessons Learned，Step 3.3 回收）
+```
+
+### 2.1.4 未知集合 (U) 與假設的結構化關聯
+
+U 定義假設的「有效範圍」——假設在什麼條件下需要成立。
+
+```
+Assumption A-001: "外殼可帶走 80% 熱量"
+    └── 有效範圍由 U 定義（透過 assumption_refs 結構化關聯）：
+        ├── U-001 環境溫度: [25°C, 55°C, 85°C]
+        └── U-002 負載: [50%, 80%, 100%]
+
+驗證計畫 = 假設 × U 因子組合
+    → 若 85°C + 100% 負載時散熱 < 80% → Disproved（觸發 §2.1.3 PDCA）
+```
+
+每個 `UnknownFactor` 透過 `assumption_refs` (JSON) 結構化關聯到具體假設 ID，取代舊的文字欄位。
+- 假設台帳管「對/錯」（Assumption 的 status 狀態機）
+- 未知集合管「變/不變」（U 的 levels / range_desc）
+- 兩者搭配定義驗證邊界，並可組合為 DOE 實驗矩陣
+
 **Gate 2.1 檢查點**
 > ✅ Top 3 假設每個都有「可在 1-2 週內完成」的驗證設計，包含明確的最小驗證方法、成本與週期。
+> ✅ 所有 Disproved 假設都有明確的處置決策（修改設計/放寬約束/接受風險）。
 > ✅ 核心工件 Assumption 狀態: Reviewed -> Verified。
 
 ---
@@ -1074,7 +1120,7 @@ KT_決策記錄:
 
 ---
 
-**版本**: v1.6
+**版本**: v1.7
 **最後更新**: 2026-02-25
 **適用範圍**: 早期概念設計階段 (從概念發散到主路線決策)
-**重要更新**: Step 2.2.2 TRIZ 解矛盾升級為三路徑統一求解（`POST /triz/solve`）—— 分類(LLM) → 路由(TC/PC/SF) → 規則引擎查表 + LLM 具體化。新增 5 個 Prompt 模板 + 規則引擎 `triz_engine.py`。模組分工表更新為已實作的規則 vs LLM 分工。`UnifiedTrizResult` 取代舊的平面解法列表。
+**重要更新**: 新增 §2.1.3 假設 PDCA 閉環（`POST /assumptions/{id}/disprove` + 影響分析 + 迭代迴路）。新增 §2.1.4 未知集合 (U) 與假設的結構化關聯（`assumption_refs` JSON 取代文字欄位）。流程總覽圖新增 Step 2.2 → Step 2.1 的假設推翻迭代箭頭。Gate 2.1 檢查點新增 Disproved 假設處置要求。

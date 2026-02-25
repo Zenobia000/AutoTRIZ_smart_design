@@ -5,6 +5,7 @@
 
 > **v1.2 更新**：Step 編號已按實際執行順序重新編排，引入雙層狀態機概念，並加入 `Step 3.1.loop: 證據補齊 (Evidence Closure)` 迴圈。
 > **v1.3 更新**：Step 2.2.2 TRIZ 解矛盾升級為三路徑統一求解（`POST /triz/solve`），分類(LLM) → TC/PC/SF 路由 → 規則引擎查表 + LLM 具體化，回傳 `UnifiedTrizResult`。
+> **v1.4 更新**：新增 Step 2.1 ↔ Step 2.2 假設推翻迭代迴路。Step 2.1 AI R&R 新增「假設推翻影響分析」（`POST /assumptions/{id}/disprove`）。Gate 2.1 檢查點新增 Disproved 假設處置要求。未知集合 (U) 與假設透過 `assumption_refs` 結構化關聯。
 
 ## Step 編號對照
 
@@ -55,6 +56,7 @@ stateDiagram-v2
         }
         state "Step 2.3: Pre-CAD 設計審查" as S2_3
         S2_1 --> S2_2 : Gate 2.1 ✓
+        S2_2 --> S2_1 : 假設推翻 (PDCA 迭代)
         S2_2 --> S2_3 : Gate 2.2 ✓ (MVP CAD 候選集)
     }
 
@@ -85,7 +87,7 @@ stateDiagram-v2
 | Gate 1.1 | Step 1.1 → Step 1.2 | 內部 Gate | **DRAFT → PHASE_1** | Constraint: Draft → Reviewed |
 | Gate 1.2 | Step 1.2 → Step 1.3 | 內部 Gate | Phase 1 內部 | Contradiction, Assumption: Draft → Reviewed |
 | Phase Gate 1 (= Gate 1.3) | Step 1.3 → Step 2.1 | 內部 Gate | **PHASE_1 → PHASE_2** | Contradiction: Reviewed → Verified; Breakpoint: Draft → Reviewed |
-| Gate 2.1 | Step 2.1 → Step 2.2 | 內部 Gate | Phase 2 內部 | Assumption: Reviewed → Verified |
+| Gate 2.1 | Step 2.1 → Step 2.2 | 內部 Gate | Phase 2 內部 | Assumption: Reviewed → Verified; Disproved 假設已處置 |
 | **Gate 2.2** | Step 2.2 → Step 2.3 | **Pre-CAD Gate** | Phase 2 內部 | Concept Route: Draft → Reviewed |
 | **Phase Gate 2 (= Gate 2.3)** | Step 2.3 → Step 3.1 | **CAD Gate** | **PHASE_2 → PHASE_3** | Concept Route: Reviewed → Verified; Pre-CAD Review Report: Draft → Reviewed; MVP CAD Model: Draft → Reviewed |
 | Gate 3.1 | Step 3.1 → Step 3.1.loop | 內部 Gate | Phase 3 內部 | Evidence Matrix, Risk: Draft → Reviewed |
@@ -213,15 +215,19 @@ flowchart LR
 ### Phase 2: Diverge (假設與發散)
 
 #### Step 2.1: 假設與驗證規劃（HDA + 未知集合）
-- **目的**: 建立假設台帳與未知集合，完整描述不確定性全貌。
+- **目的**: 建立假設台帳與未知集合，完整描述不確定性全貌。含假設 PDCA 閉環機制。
 - **核心工件**: Assumption (Verified)
 - **Human (RD Team) R&R**:
     - 填寫假設台帳。
-    - 定義未知集合 (U)。
+    - 定義未知集合 (U)，透過 `assumption_refs` 結構化關聯到具體假設。
+    - 對 Disproved 假設做處置決策：(A) 修改設計 → 回 Step 2.2、(B) 放寬約束 → 回 Step 1.1、(C) 接受風險 → 升級為 Risk 條目。
 - **AI (Copilot) R&R**:
     - 提供假設台帳模板。
     - 協助整理未知因子列表。
-- **Gate 2.1**: Top 3 假設每個都有可在 1-2 週內完成的驗證設計。**核心工件 Assumption 狀態: Reviewed → Verified**。
+    - **假設推翻影響分析** (`POST /assumptions/{id}/disprove`)：記錄推翻原因與時間戳，透過 `source_refs` 反查受影響的矛盾、TRIZ 解法、方案，產出 `impact_analysis` + `recommended_actions`。
+    - 批次萃取假設 (`POST /assumptions/extract`)：從上游工件自動抽取假設。
+- **迭代迴路**: Step 2.2 執行中發現假設被推翻時，回流 Step 2.1 重新評估，再進入 Step 2.2 重新求解受影響矛盾。
+- **Gate 2.1**: Top 3 假設每個都有可在 1-2 週內完成的驗證設計。**所有 Disproved 假設都有明確的處置決策（修改設計/放寬約束/接受風險）**。**核心工件 Assumption 狀態: Reviewed → Verified**。
 
 #### Step 2.2: 創造與調整（TRIZ → 子系統 → SCAMPER → 方案 → MUST）
 - **目的**: 用 TRIZ 解矛盾找方向，用 SCAMPER 做模組級變形，輸出結構化可審查的方案集合，並用 MUST 快篩淘汰不可行方案。此階段產出的候選方案將進入 **Pre-CAD Gate (Step 2.3)** 進行首次收斂。

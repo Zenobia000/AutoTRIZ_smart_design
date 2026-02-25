@@ -19,5 +19,5 @@ class UnknownFactor(Base):
     levels: Mapped[dict] = mapped_column(JSON, default=list)  # ["低","中","高"]
     range_desc: Mapped[str] = mapped_column(String(200), default="")  # e.g. "-20°C ~ +55°C"
     impact_on: Mapped[str] = mapped_column(Text, default="")  # 影響哪些指標
-    related_assumptions: Mapped[str] = mapped_column(Text, default="")  # e.g. "A-001, A-003"
+    assumption_refs: Mapped[dict] = mapped_column(JSON, default=list)  # [{"assumption_id": "uuid", "code": "A-001"}, ...]
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
