@@ -14,11 +14,12 @@ from src.models.decision import DecisionRecord
 from src.models.gate import GateCheck
 from src.models.separation_solution import SeparationSolution
 from src.models.sufield_solution import SuFieldSolution
+from src.models.pre_cad_review import PreCadReview
 
 __all__ = [
     "Project", "TaskDefinition", "SocraticQuestion", "Contradiction",
     "Assumption", "TrizSolution", "ScamperVariant", "Alternative",
     "MustEvaluation", "WantCriteria", "WantScore", "Risk",
     "Experiment", "DecisionRecord", "GateCheck",
-    "SeparationSolution", "SuFieldSolution",
+    "SeparationSolution", "SuFieldSolution", "PreCadReview",
 ]

@@ -129,7 +129,7 @@ def test_gate_1_check(client):
     pid = r.json()["id"]
 
     # Without definition — should fail
-    r = client.post(f"/api/v1/projects/{pid}/gates/1/check")
+    r = client.post(f"/api/v1/projects/{pid}/gates/1.1/check")
     assert r.status_code == 200
     assert r.json()["overall_pass"] is False
 
@@ -142,7 +142,7 @@ def test_gate_1_check(client):
             {"name": "M3", "target": "300", "method": "calc"},
         ],
     })
-    r = client.post(f"/api/v1/projects/{pid}/gates/1/check")
+    r = client.post(f"/api/v1/projects/{pid}/gates/1.1/check")
     assert r.json()["overall_pass"] is True
 
 

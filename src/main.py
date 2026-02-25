@@ -51,7 +51,7 @@ app.include_router(causal_loops.router)
 app.include_router(gates.router)
 
 # Phase 2: Diverge routers
-from src.routers import assumptions, unknown_factors, triz, scamper, alternatives, must
+from src.routers import assumptions, unknown_factors, triz, scamper, alternatives, must, pre_cad_reviews
 
 app.include_router(assumptions.router)
 app.include_router(unknown_factors.router)
@@ -59,6 +59,7 @@ app.include_router(triz.router)
 app.include_router(scamper.router)
 app.include_router(alternatives.router)
 app.include_router(must.router)
+app.include_router(pre_cad_reviews.router)
 
 # Phase 3: Converge routers
 from src.routers import want, risks, experiments, decisions, export

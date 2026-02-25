@@ -12,11 +12,13 @@ class ExperimentCreate(BaseModel):
     success_criteria: str = ""
     failure_action: str = ""
     cost_cycle: str = ""
+    evidence_level: str = "E0"
 
 
 class ExperimentUpdate(BaseModel):
     status: Optional[str] = None
     result: Optional[str] = None
+    evidence_level: Optional[str] = None
 
 
 class ExperimentResponse(BaseModel):
@@ -31,6 +33,7 @@ class ExperimentResponse(BaseModel):
     cost_cycle: str
     status: str
     result: Optional[str]
+    evidence_level: str
     created_at: datetime
 
     model_config = {"from_attributes": True}

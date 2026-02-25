@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import String, Text, DateTime, ForeignKey
+from sqlalchemy import String, Text, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database import Base
@@ -22,4 +22,5 @@ class Experiment(Base):
     cost_cycle: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(20), default="planned")  # planned/in_progress/completed
     result: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    evidence_level: Mapped[str] = mapped_column(String(5), default="E0")  # E0/E1/E2/E3/E4
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))

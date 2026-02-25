@@ -230,12 +230,39 @@ def signoff_decision(pid: str, signed_by: str):
     return _handle(httpx.put(_url(f"/projects/{pid}/decisions/signoff"), json={"signed_by": signed_by}, timeout=TIMEOUT))
 
 
+# --- Pre-CAD Reviews ---
+def list_pre_cad_reviews(pid: str):
+    return _handle(httpx.get(_url(f"/projects/{pid}/pre-cad-reviews"), timeout=TIMEOUT))
+
+def create_pre_cad_review(pid: str, data: dict):
+    return _handle(httpx.post(_url(f"/projects/{pid}/pre-cad-reviews"), json=data, timeout=TIMEOUT))
+
+def update_pre_cad_review(pid: str, rid: str, data: dict):
+    return _handle(httpx.put(_url(f"/projects/{pid}/pre-cad-reviews/{rid}"), json=data, timeout=TIMEOUT))
+
+def ai_analyze_pre_cad(pid: str, rid: str):
+    return _handle(httpx.post(_url(f"/projects/{pid}/pre-cad-reviews/{rid}/ai-analyze"), timeout=TIMEOUT))
+
+def delete_pre_cad_review(pid: str, rid: str):
+    return _handle(httpx.delete(_url(f"/projects/{pid}/pre-cad-reviews/{rid}"), timeout=TIMEOUT))
+
+
+# --- Evidence Matrix ---
+def evidence_matrix(pid: str):
+    return _handle(httpx.get(_url(f"/projects/{pid}/experiments/evidence-matrix"), timeout=TIMEOUT))
+
+
 # --- Gates ---
-def check_gate(pid: str, gate_number: int):
-    return _handle(httpx.post(_url(f"/projects/{pid}/gates/{gate_number}/check"), timeout=TIMEOUT))
+def check_gate(pid: str, gate_id: str):
+    return _handle(httpx.post(_url(f"/projects/{pid}/gates/{gate_id}/check"), timeout=TIMEOUT))
 
 def list_gates(pid: str):
     return _handle(httpx.get(_url(f"/projects/{pid}/gates"), timeout=TIMEOUT))
+
+
+# --- WANT seed ---
+def seed_want_criteria(pid: str):
+    return _handle(httpx.post(_url(f"/projects/{pid}/want/criteria/seed"), timeout=TIMEOUT))
 
 
 # --- Export ---

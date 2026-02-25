@@ -66,19 +66,26 @@ if st.session_state.project_id:
             "Step 1.3 - 因果迴路圖",
             "Step 1.3 - 斷路點識別",
             "Gate 1.1",
+            "Gate 1.2",
+            "Gate 1.3",
             "Step 2.1 - 假設台帳",
             "Step 2.1 - 未知集合 (U)",
+            "Gate 2.1",
             "Step 2.2.1 - Anti-Anchor Sprint",
             "Step 2.2.2 - TRIZ 解法",
             "Step 2.2.4 - SCAMPER 變形",
             "Step 2.2.5 - 方案集合",
             "Step 2.2.6 - MUST 篩選",
             "Gate 2.2",
-            "Step 3.2 - WANT 評分",
+            "Step 2.3 - Pre-CAD 審查",
+            "Gate 2.3",
+            "Step 3.1 - 證據矩陣",
             "Step 3.1 - 風險評估",
-            "Step 3.2 - KT 決策記錄",
             "Step 3.1.loop - 最小實驗",
+            "Step 3.2 - WANT 評分",
+            "Step 3.2 - KT 決策記錄",
             "Gate 3.2",
+            "Gate 3.3",
             "匯出報告",
         ],
     )
@@ -359,21 +366,34 @@ elif page == "Step 1.3 - 斷路點識別":
                     st.rerun()
 
 
-# --- Gate 1.1 ---
-elif page == "Gate 1.1":
-    st.header("Gate 1.1 檢查")
-    if st.button("執行 Gate 1.1 檢查", type="primary"):
-        result = api.check_gate(pid, 1)
-        st.session_state["gate1_result"] = result
-    result = st.session_state.get("gate1_result")
+# --- Gate pages (generic handler) ---
+elif page.startswith("Gate "):
+    gate_id = page.replace("Gate ", "")
+    GATE_NAMES = {
+        "1.1": ("三個最不能失敗指標", "Step 1.2"),
+        "1.2": ("假設+矛盾充足", "Step 1.3"),
+        "1.3": ("Phase Gate 1: 因果迴路+斷路點+分類", "Phase 2"),
+        "2.1": ("假設驗證設計就緒", "Step 2.2"),
+        "2.2": ("≥3 路線通過 MUST", "Step 2.3"),
+        "2.3": ("Phase Gate 2: Pre-CAD 通過", "Phase 3"),
+        "3.2": ("KT 決策+證據+風險緩解", "Step 3.3"),
+        "3.3": ("Phase Gate 3: 完成", "COMPLETED"),
+    }
+    gate_name, next_step = GATE_NAMES.get(gate_id, (gate_id, ""))
+    st.header(f"Gate {gate_id} 檢查")
+    st.caption(gate_name)
+    if st.button(f"執行 Gate {gate_id} 檢查", type="primary"):
+        result = api.check_gate(pid, gate_id)
+        st.session_state[f"gate_{gate_id}_result"] = result
+    result = st.session_state.get(f"gate_{gate_id}_result")
     if result:
         for item in result["checklist"]:
             icon = "✅" if item["passed"] else "❌"
             st.write(f"{icon} {item['item']} {item.get('note', '')}")
         if result["overall_pass"]:
-            st.success("Gate 1.1 通過！可進入 Phase 2: Diverge")
+            st.success(f"Gate {gate_id} 通過！可進入 {next_step}")
         else:
-            st.warning("Gate 1.1 未通過，請補齊缺項")
+            st.warning(f"Gate {gate_id} 未通過，請補齊缺項")
 
 
 # --- Step 2.1: Assumptions ---
@@ -856,29 +876,76 @@ elif page == "Step 2.2.6 - MUST 篩選":
                 st.write(f"{icon} {ev['alternative_id'][:8]}... — {'Pass' if ev['overall_pass'] else 'Fail'}")
 
 
-# --- Gate 2.2 ---
-elif page == "Gate 2.2":
-    st.header("Gate 2.2 檢查")
-    if st.button("執行 Gate 2.2 檢查", type="primary"):
-        result = api.check_gate(pid, 2)
-        st.session_state["gate2_result"] = result
-    result = st.session_state.get("gate2_result")
-    if result:
-        for item in result["checklist"]:
-            icon = "✅" if item["passed"] else "❌"
-            st.write(f"{icon} {item['item']} {item.get('note', '')}")
-        if result["overall_pass"]:
-            st.success("Gate 2.2 通過！可進入 Phase 3: Converge")
-        else:
-            st.warning("Gate 2.2 未通過")
+# --- Step 2.3: Pre-CAD 審查 ---
+elif page == "Step 2.3 - Pre-CAD 審查":
+    st.header("Pre-CAD 可行性審查")
+    st.caption("5 維度評分 (空間/成本/安全/解耦/供應)，每項 1-5 分，全部 ≥ 3 才通過")
+
+    alts = api.list_alternatives(pid)
+    passed_alts = [a for a in alts if a["status"] in ("must_pass", "selected", "backup")]
+
+    if not passed_alts:
+        st.info("尚無通過 MUST 篩選的方案，請先完成 Step 2.2.6")
+    else:
+        reviews = api.list_pre_cad_reviews(pid)
+        reviewed_alt_ids = {r["alternative_id"] for r in reviews}
+
+        for a in passed_alts:
+            st.subheader(f"{a['code']}: {a['name']}")
+            existing = [r for r in reviews if r["alternative_id"] == a["id"]]
+
+            if existing:
+                r = existing[0]
+                dims = ["space", "cost", "safety", "decoupling", "supply"]
+                dim_names = ["空間約束", "成本上限", "安全餘裕", "解耦程度", "供應風險"]
+                cols = st.columns(5)
+                for i, (d, dn) in enumerate(zip(dims, dim_names)):
+                    score = r.get(f"{d}_score", 0)
+                    color = "🟢" if score >= 4 else ("🟡" if score == 3 else "🔴")
+                    cols[i].metric(f"{color} {dn}", f"{score}/5")
+                    if r.get(f"{d}_note"):
+                        cols[i].caption(r[f"{d}_note"])
+
+                icon = "✅" if r["overall_pass"] else "❌"
+                st.write(f"**整體**: {icon} {'通過' if r['overall_pass'] else '未通過'}")
+
+                if r.get("ai_analysis"):
+                    with st.expander("AI 分析結果"):
+                        st.write(r["ai_analysis"])
+                elif st.button(f"AI 分析", key=f"pcai_{a['id']}"):
+                    with st.spinner("AI 分析中..."):
+                        result = api.ai_analyze_pre_cad(pid, r["id"])
+                        st.rerun()
+            else:
+                with st.expander(f"建立審查 — {a['code']}"):
+                    dims = ["space", "cost", "safety", "decoupling", "supply"]
+                    dim_names = ["空間約束", "成本上限", "安全餘裕", "解耦程度", "供應風險"]
+                    data = {"alternative_id": a["id"]}
+                    for d, dn in zip(dims, dim_names):
+                        c1, c2 = st.columns([1, 3])
+                        data[f"{d}_score"] = c1.number_input(f"{dn} (1-5)", 1, 5, 3, key=f"pc_{d}_{a['id']}")
+                        data[f"{d}_note"] = c2.text_input(f"{dn} 備註", key=f"pcn_{d}_{a['id']}")
+                    data["reviewer"] = st.text_input("審查者", key=f"pcr_{a['id']}")
+                    if st.button("提交審查", key=f"pcsub_{a['id']}"):
+                        api.create_pre_cad_review(pid, data)
+                        st.rerun()
+            st.divider()
 
 
 # --- Step 3.2: WANT ---
 elif page == "Step 3.2 - WANT 評分":
     st.header("WANT 評分")
 
-    # Criteria management
+    # Seed standard criteria
     criteria = api.list_want_criteria(pid)
+    if not criteria:
+        if st.button("載入標準模板 (W1-W6)", type="primary"):
+            try:
+                api.seed_want_criteria(pid)
+                st.rerun()
+            except Exception as e:
+                st.error(f"載入失敗: {e}")
+
     with st.expander("管理 WANT 條件"):
         cols = st.columns(4)
         w_code = cols[0].text_input("編號", value=f"W{len(criteria)+1}", key="w_code")
@@ -937,6 +1004,45 @@ elif page == "Step 3.2 - WANT 評分":
                 alt = next((a for a in alts if a["id"] == alt_id), None)
                 name = f"{alt['code']}: {alt['name']}" if alt else alt_id[:8]
                 st.metric(name, total)
+
+
+# --- Step 3.1: Evidence Matrix ---
+elif page == "Step 3.1 - 證據矩陣":
+    st.header("證據矩陣")
+    st.caption("假設 × 證據等級追蹤，識別驗證缺口")
+
+    EVIDENCE_LABELS = {"E0": "無證據", "E1": "工程估算", "E2": "仿真", "E3": "原型驗證", "E4": "量產驗證"}
+
+    try:
+        em = api.evidence_matrix(pid)
+        matrix = em.get("matrix", [])
+    except Exception as e:
+        st.error(f"取得證據矩陣失敗: {e}")
+        matrix = []
+
+    if not matrix:
+        st.info("尚無假設或實驗資料")
+    else:
+        # Summary stats
+        total = len(matrix)
+        gaps = sum(1 for m in matrix if m["best_evidence_level"] in ("E0", "E1"))
+        c1, c2, c3 = st.columns(3)
+        c1.metric("假設總數", total)
+        c2.metric("有驗證缺口 (E0/E1)", gaps)
+        c3.metric("覆蓋率", f"{(total - gaps) / total * 100:.0f}%" if total else "N/A")
+
+        # Matrix table
+        for m in matrix:
+            level = m["best_evidence_level"]
+            color = "🔴" if level in ("E0", "E1") else ("🟡" if level == "E2" else "🟢")
+            with st.expander(f"{color} {m['assumption_code']}: {m['content'][:60]}... — {level} ({EVIDENCE_LABELS.get(level, level)})"):
+                st.write(f"**風險等級**: {m['risk_level']} | **狀態**: {m['status']}")
+                st.write(f"**關聯實驗數**: {m['experiment_count']}")
+                if m["experiments"]:
+                    for exp in m["experiments"]:
+                        st.write(f"  - {exp['goal'][:50]} | {exp['status']} | {exp['evidence_level']}")
+                else:
+                    st.warning("無關聯實驗，建議在「最小實驗」頁面建立驗證計畫")
 
 
 # --- Step 3.1: Risks ---
@@ -1019,49 +1125,49 @@ elif page == "Step 3.2 - KT 決策記錄":
 elif page == "Step 3.1.loop - 最小實驗":
     st.header("最小實驗計畫")
 
+    assumptions = api.list_assumptions(pid)
+    assumption_map = {a["id"]: f"{a['code']}: {a['content'][:40]}" for a in assumptions}
+
     with st.expander("新增實驗"):
         e_goal = st.text_input("目標", key="e_goal")
         e_question = st.text_input("要回答的問題", key="e_question")
         e_method = st.text_area("方法", key="e_method", height=60)
         e_success = st.text_input("成功標準", key="e_success")
         e_failure = st.text_input("失敗後行動", key="e_failure")
+        e_assumption = st.selectbox("關聯假設", options=[""] + list(assumption_map.keys()),
+                                    format_func=lambda x: assumption_map.get(x, "-- 無 --"), key="e_assumption")
+        e_evidence = st.selectbox("證據等級", ["E0", "E1", "E2", "E3", "E4"], key="e_evidence")
         if st.button("新增實驗") and e_goal:
-            api.create_experiment(pid, {
+            payload = {
                 "goal": e_goal, "question": e_question, "method": e_method,
                 "success_criteria": e_success, "failure_action": e_failure,
-            })
+                "evidence_level": e_evidence,
+            }
+            if e_assumption:
+                payload["assumption_id"] = e_assumption
+            api.create_experiment(pid, payload)
             st.rerun()
 
     experiments = api.list_experiments(pid)
     if experiments:
         for e in experiments:
             status_icon = {"planned": "📋", "in_progress": "🔬", "completed": "✅"}.get(e["status"], "")
-            with st.expander(f"{status_icon} {e['goal'][:60]}"):
+            ev_label = e.get("evidence_level", "E0")
+            with st.expander(f"{status_icon} [{ev_label}] {e['goal'][:60]}"):
                 st.write(f"**問題**: {e['question']}")
                 st.write(f"**方法**: {e['method']}")
-                st.write(f"**狀態**: {e['status']}")
+                st.write(f"**狀態**: {e['status']} | **證據等級**: {ev_label}")
+                if e.get("assumption_id"):
+                    st.write(f"**關聯假設**: {assumption_map.get(e['assumption_id'], e['assumption_id'][:8])}")
                 new_status = st.selectbox("更新狀態", ["planned", "in_progress", "completed"], key=f"es_{e['id']}")
+                new_ev = st.selectbox("證據等級", ["E0", "E1", "E2", "E3", "E4"],
+                                      index=["E0", "E1", "E2", "E3", "E4"].index(ev_label), key=f"eev_{e['id']}")
                 result = st.text_area("結果", value=e.get("result") or "", key=f"er_{e['id']}")
                 if st.button("更新", key=f"eu_{e['id']}"):
-                    api.update_experiment(pid, e["id"], {"status": new_status, "result": result})
+                    api.update_experiment(pid, e["id"], {"status": new_status, "result": result, "evidence_level": new_ev})
                     st.rerun()
 
 
-# --- Gate 3.2 ---
-elif page == "Gate 3.2":
-    st.header("Gate 3.2 檢查")
-    if st.button("執行 Gate 3.2 檢查", type="primary"):
-        result = api.check_gate(pid, 3)
-        st.session_state["gate3_result"] = result
-    result = st.session_state.get("gate3_result")
-    if result:
-        for item in result["checklist"]:
-            icon = "✅" if item["passed"] else "❌"
-            st.write(f"{icon} {item['item']} {item.get('note', '')}")
-        if result["overall_pass"]:
-            st.success("Gate 3.2 通過！專案完成 🎉")
-        else:
-            st.warning("Gate 3.2 未通過")
 
 
 # --- Export ---
