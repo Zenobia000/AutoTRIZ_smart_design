@@ -4,6 +4,7 @@
 本文件核心概念為 **雙層狀態機 (Dual-Layer State Machine)**，同時管理 **流程狀態 (Process State)** 與 **工件狀態 (Artifact State)**。
 
 > **v1.2 更新**：Step 編號已按實際執行順序重新編排，引入雙層狀態機概念，並加入 `Step 3.1.loop: 證據補齊 (Evidence Closure)` 迴圈。
+> **v1.3 更新**：Step 2.2.2 TRIZ 解矛盾升級為三路徑統一求解（`POST /triz/solve`），分類(LLM) → TC/PC/SF 路由 → 規則引擎查表 + LLM 具體化，回傳 `UnifiedTrizResult`。
 
 ## Step 編號對照
 
@@ -39,7 +40,7 @@ stateDiagram-v2
         state "Step 2.1: 假設與驗證規劃" as S2_1
         state "Step 2.2: 創造與調整" as S2_2 {
             state "2.2.1: Anti-Anchor Sprint" as S2_2_1
-            state "2.2.2: TRIZ 解矛盾" as S2_2_2
+            state "2.2.2: TRIZ 統一求解 (TC/PC/SF)" as S2_2_2
             state "2.2.3: 子系統定義" as S2_2_3
             state "2.2.4: SCAMPER 變形" as S2_2_4
             state "2.2.5: AI 方案生成" as S2_2_5
@@ -145,27 +146,29 @@ stateDiagram-v2
 
 ### 平行處理說明
 
-在 Step 2.2 (創造與調整) 中，針對不同矛盾句或子系統，2.2.2 (TRIZ 解矛盾) 和 2.2.4 (SCAMPER 模組變形) 可以並行執行：
+在 Step 2.2 (創造與調整) 中，針對不同矛盾句或子系統，2.2.2 (TRIZ 統一求解) 和 2.2.4 (SCAMPER 模組變形) 可以並行執行：
 
 ```mermaid
 flowchart LR
     subgraph "Parallel TRIZ & SCAMPER"
-        subgraph "TRIZ for Contradiction C-001"
-            C001_Input["矛盾句 C-001"] --> TRIZ_C001["2.2.2 TRIZ 解矛盾"]
+        subgraph "TRIZ 統一求解 C-001"
+            C001_Input["矛盾句 C-001"] --> TRIZ_C001["2.2.2 POST /triz/solve<br>(分類→TC/PC/SF→具體化)"]
+            TRIZ_C001 --> C001_Result["UnifiedTrizResult<br>TC+PC+SF 解法"]
+        end
+        subgraph "TRIZ 統一求解 C-002"
+            C002_Input["矛盾句 C-002"] --> TRIZ_C002["2.2.2 POST /triz/solve"]
+            TRIZ_C002 --> C002_Result["UnifiedTrizResult"]
         end
         subgraph "SCAMPER for Subsystem A"
             SSA_Input["子系統 A"] --> SCAMPER_SSA["2.2.4 SCAMPER 變形"]
         end
-        subgraph "SCAMPER for Subsystem B"
-            SSB_Input["子系統 B"] --> SCAMPER_SSB["2.2.4 SCAMPER 變形"]
-        end
     end
-    TRIZ_C001 --> S2_2_5_AI_Gen["2.2.5 AI 方案生成"]
+    C001_Result --> S2_2_5_AI_Gen["2.2.5 AI 方案生成"]
+    C002_Result --> S2_2_5_AI_Gen
     SCAMPER_SSA --> S2_2_5_AI_Gen
-    SCAMPER_SSB --> S2_2_5_AI_Gen
 ```
 
-所有並行產出的解法方向與變形最終匯聚到 2.2.5 (AI 方案生成) 做交叉組合，再由 2.2.6 (MUST 快篩) 統一淘汰。
+每條矛盾的統一求解 (`POST /triz/solve`) 是獨立的——內部自動完成分類、三路徑路由、規則引擎查表和 LLM 具體化，每次最多 4 個 LLM calls。所有並行產出的解法方向與變形最終匯聚到 2.2.5 (AI 方案生成) 做交叉組合，再由 2.2.6 (MUST 快篩) 統一淘汰。
 
 ## 階段與狀態說明 (R&R)
 
@@ -229,12 +232,17 @@ flowchart LR
     - 定義 MUST 條件並執行 Go/No-Go 判定。
 - **AI (Copilot) R&R**:
     - **2.2.1 Anti-Anchor Sprint**: 引導產生非典型架構概念。
-    - **2.2.2 TRIZ 解矛盾**: 根據矛盾句生成原理+抽象策略+工程對映。
+    - **2.2.2 TRIZ 統一求解** (`POST /triz/solve`): 對每條矛盾執行三路徑統一求解：
+        - **分類** (LLM): 判定矛盾類型 TC/PC/SF（可複選）
+        - **Path A 技術矛盾**: 參數映射 (LLM+KB) → 矩陣查表 (規則引擎) → 原理具體化 (LLM+KB)
+        - **Path B 物理矛盾**: 注入 4 大分離原則 KB → 策略選擇 (LLM)
+        - **Path C Su-Field**: 狀態分類 → 標準解匹配 (規則引擎) → 具體化 (LLM+KB)
+        - 回傳 `UnifiedTrizResult`（含三路徑解法 + 矩陣查表軌跡 + 參數映射軌跡）
     - **2.2.3 子系統定義**: 識別受影響子系統。
     - **2.2.4 SCAMPER 模組變形**: 對每個子系統執行 SCAMPER 動作。
     - **2.2.5 AI 方案生成**: 整合 TRIZ 解法 + SCAMPER 變形，生成完整方案規格 (含 Interface Contract)。
     - **2.2.6 MUST 快篩**: 對候選方案逐項檢查 MUST 條件，不通過者淘汰。
-- **平行處理**: 不同矛盾句的 TRIZ 解法、不同子系統的 SCAMPER 變形可並行執行。
+- **平行處理**: 不同矛盾句的 TRIZ 統一求解、不同子系統的 SCAMPER 變形可並行執行。
 - **Gate 2.2 (Pre-CAD Gate) 前提**: 至少保留 3 條「架構級」路線，其中包含至少 1 條 Anti-Anchor 路線。每條路線都有完整的方案規格 (機制、假設、風險、最小驗證)，並產出初步的 **Interface Contract**。每條路線的 **MUST Rule** 都經過判斷，並提供對應的初步證據。**核心工件 Concept Route, Interface 狀態: Draft → Reviewed**。
 
 #### Step 2.3: Pre-CAD 設計審查 (Pre-CAD Gate)

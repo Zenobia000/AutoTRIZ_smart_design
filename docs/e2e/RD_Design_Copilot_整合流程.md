@@ -155,7 +155,7 @@ flowchart TD
 
 #### TRIZ Prompt Markdown 參照表
 
-規則引擎區的知識以結構化 Markdown 存放，供 Prompt 注入或 RAG 檢索：
+知識庫以結構化 Markdown 存放，由規則引擎 (`triz_engine.py`) 啟動時解析為 in-memory 資料結構：
 
 ```
 rd_assistant_design_system/triz_knowledge_base/
@@ -166,31 +166,45 @@ rd_assistant_design_system/triz_knowledge_base/
 └── 05_76_standard_solutions.md  # Su-Field 76 標準解 (5 大類)
 ```
 
-> **注入策略**：39 參數 + 分離原則 + 40 原理 → 全量注入（~6,500 token）；矛盾矩陣 + 76 標準解 → RAG 按需檢索相關行。
+Prompt 模板（由 `triz_solve_service.py` 調用，注入 KB 內容後送 LLM）：
 
-#### 模組分工：規則 vs LLM
+```
+src/prompts/
+├── triz_classify.md             # 矛盾類型分類 (TC/PC/SF) — 無 KB 注入
+├── triz_param_mapping.md        # 自然語言 → 39 參數 ID — 注入 39 params 全量表格
+├── triz_tc_solve.md             # 技術矛盾具體化 — 注入矩陣查表結果 + 選中原理詳情
+├── triz_pc_solve.md             # 物理矛盾分離策略 — 注入 4 大分離原則全量
+└── triz_sf_solve.md             # Su-Field 標準解具體化 — 注入匹配的標準解清單
+```
 
-| 模組 | 執行方式 | 說明 |
-|------|---------|------|
-| **矛盾類型分類** (技術/物理/Su-Field) | 規則引擎 | 基於功能模型結構判斷，確定性高 |
-| **矛盾矩陣查表 → 原理推薦** | 規則引擎 | 39×39 矩陣查表 + Top-N 推薦 |
-| **分離原則映射** (時間/空間/條件/整體局部) | 規則引擎 | 規則分類後套策略 |
-| **76 標準解選取** | 規則引擎 | Su-Field 模型 → 標準解匹配 |
-| **報告結構模板** | 規則引擎 | 固定章節與欄位 |
-| **自然語言 → 功能模型/參數/矛盾** | **LLM** | 語意歧義、領域隱含知識、未明確說出的真問題 |
-| **39 參數映射** | **LLM** | 同一句話可能對應多個參數，需語意消歧 |
-| **原理具體化** (抽象→工程設計) | **LLM + RAG** | 把「原理 #15 動態化」變成領域可執行的設計改動 |
-| **方案品質控管** | **LLM + 規則** | 避免幻覺、確保符合約束條件 |
+> **注入策略**：39 參數表格 + 分離原則 → 全量注入（~6,500 token）；矩陣查表結果 + 原理詳情 → 按需注入（僅推薦的原理）；76 標準解 → 按 Su-Field 狀態匹配後注入相關子集。
+
+#### 模組分工：規則 vs LLM（已實作）
+
+| 模組 | 執行方式 | 實作位置 | 說明 |
+|------|---------|---------|------|
+| **矛盾類型分類** (TC/PC/SF) | **LLM** | `triz_classify.md` | 從工程描述判斷矛盾類型，語意理解不可規則化 |
+| **39 參數映射** (自然語言→參數 ID) | **LLM + KB** | `triz_param_mapping.md` | 注入 39 參數全量表格，LLM 做語意消歧 |
+| **矛盾矩陣查表 → 原理推薦** | 規則引擎 | `triz_engine.lookup_matrix()` | 39×39 矩陣確定性查表，零 LLM 成本 |
+| **原理詳情檢索** | 規則引擎 | `triz_engine.get_principles()` | 從 40 原理 KB 中取出子原理 + 工程提示 |
+| **分離原則 KB 注入** | 規則引擎 | `triz_engine.format_separations_for_prompt()` | 4 大分離原則全量格式化 |
+| **76 標準解匹配** | 規則引擎 | `triz_engine.get_standards_for_state()` | Su-Field 狀態 → 對應類別的標準解 |
+| **技術矛盾具體化** (抽象→工程設計) | **LLM + KB** | `triz_tc_solve.md` | 注入矩陣結果 + 原理詳情，LLM 落地為工程手段 |
+| **物理矛盾分離策略** | **LLM + KB** | `triz_pc_solve.md` | 注入分離原則全量，LLM 選擇策略並具體化 |
+| **Su-Field 標準解具體化** | **LLM + KB** | `triz_sf_solve.md` | 注入匹配的標準解，LLM 翻譯為工程方案 |
+| **報告結構模板** | 規則引擎 | Pydantic schemas | 固定章節與欄位（`UnifiedTrizResult`） |
+
+> **LLM calls per solve**：最多 4 次（分類 1 + 參數映射 1 + TC/PC/SF 具體化 1-2）。矩陣查表和原理/標準解檢索為零成本規則引擎。
 
 #### Copilot 流程對映
 
-| AutoTRIZ 階段 | 對應 Copilot Step | 主要執行方式 |
-|--------------|-------------------|-------------|
-| Problem Structuring | **Step 1.1-1.2** (問題界定 + 理解全貌) | LLM 抽取 + 人校準 |
-| Function Model + 矛盾定義 | **Step 1.3** (系統建模 + TRIZ 矛盾正式化) | LLM 輔助翻譯 + 規則驗證 |
-| 矛盾矩陣/分離/標準解 | **Step 2.2.2** (TRIZ 解矛盾) | 規則引擎查表 |
-| Instantiation + Solution | **Step 2.2.3-2.2.5** (子系統 + SCAMPER + 方案生成) | LLM 生成 + RAG 佐證 |
-| Ranking & Evaluation | **Step 2.2.6 / Step 3.2** (MUST 快篩 / KT 決策) | 規則引擎 + 人審 |
+| AutoTRIZ 階段 | 對應 Copilot Step | 主要執行方式 | API 端點 |
+|--------------|-------------------|-------------|---------|
+| Problem Structuring | **Step 1.1-1.2** (問題界定 + 理解全貌) | LLM 抽取 + 人校準 | `POST /contradictions/identify` |
+| Function Model + 矛盾定義 | **Step 1.3** (系統建模 + TRIZ 矛盾正式化) | LLM 輔助翻譯 + 規則驗證 | — |
+| 統一求解 (分類→路由→具體化) | **Step 2.2.2** (TRIZ 解矛盾) | **規則引擎查表 + LLM 具體化** | `POST /triz/solve` |
+| Instantiation + Solution | **Step 2.2.3-2.2.5** (子系統 + SCAMPER + 方案生成) | LLM 生成 + RAG 佐證 | — |
+| Ranking & Evaluation | **Step 2.2.6 / Step 3.2** (MUST 快篩 / KT 決策) | 規則引擎 + 人審 | — |
 
 ---
 
@@ -497,34 +511,86 @@ graph TD
 
 ### 2.2.2 TRIZ 解矛盾 (每條矛盾執行)
 
-> **AutoTRIZ 執行模式**：此步驟分為「規則引擎查表」和「LLM 具體化」兩階段。
+> **AutoTRIZ 統一求解**：此步驟透過 `POST /triz/solve` 端點，對每條矛盾執行「分類 → 三路徑路由 → 具體化」的統一求解流程。一次 API 呼叫完成所有路徑，回傳 `UnifiedTrizResult`。
 >
-> | 子步驟 | 執行方式 | 動作 |
-> |--------|---------|------|
-> | 2.2.2-1 矛盾矩陣查表 | **規則引擎** | 改善參數 × 惡化參數 → Top-N 推薦原理 |
-> | 2.2.2-2 分離原則映射 | **規則引擎** | 物理矛盾 → 時間/空間/條件/整體局部分離策略 |
-> | 2.2.2-3 Su-Field 標準解 | **規則引擎** | 若為 Su-Field 問題 → 76 標準解匹配 |
-> | 2.2.2-4 原理具體化 | **LLM + RAG** | 把抽象原理翻譯成本領域可執行的工程手段 |
-> | 2.2.2-5 品質校驗 | **規則 + 人審** | 檢查工程對映是否違反已知約束 |
+> ```
+> POST /triz/solve { contradiction_id }
+>         │
+>   ┌─────┴─────┐
+>   │ 1. 分類矛盾 │ ← LLM (triz_classify.md)
+>   │ TC? PC? SF? │   一條矛盾可同時屬於多種類型
+>   └─────┬─────┘
+>         │
+>   ┌─────┼──────────────────┬──────────────────┐
+>   ▼     ▼                  ▼                  ▼
+> Path A: TC              Path B: PC          Path C: SF
+>   │                       │                   │
+>   ├ 參數映射 (LLM+KB)     ├ 注入 4 分離原則    ├ 狀態分類→標準解匹配
+>   ├ 矩陣查表 (規則引擎)   │   (規則引擎 KB)    │   (規則引擎)
+>   ├ 原理詳情 (規則引擎)   ├ LLM 策略選擇       ├ LLM 具體化
+>   ├ LLM 具體化            │   (triz_pc_solve)  │   (triz_sf_solve)
+>   │   (triz_tc_solve)     │                   │
+>   └───────┬───────────────┴───────────────────┘
+>           ▼
+>   UnifiedTrizResult {
+>     classification, param_mapping, matrix_lookup,
+>     technical_solutions[], separation_solutions[], sufield_solutions[]
+>   }
+> ```
+>
+> | 子步驟 | 執行方式 | 動作 | 實作位置 |
+> |--------|---------|------|---------|
+> | 2.2.2-0 矛盾類型分類 | **LLM** | 判定 TC/PC/SF（可複選） | `triz_classify.md` |
+> | 2.2.2-A1 參數映射 | **LLM + KB** | 自然語言 → 39 參數 ID | `triz_param_mapping.md` |
+> | 2.2.2-A2 矩陣查表 | **規則引擎** | improve × worsen → 推薦原理 IDs | `triz_engine.lookup_matrix()` |
+> | 2.2.2-A3 原理詳情 | **規則引擎** | 取出推薦原理的子原理 + 工程提示 | `triz_engine.get_principles()` |
+> | 2.2.2-A4 TC 具體化 | **LLM + KB** | 注入矩陣結果 + 原理詳情 → 工程手段 | `triz_tc_solve.md` |
+> | 2.2.2-B1 PC 分離策略 | **LLM + KB** | 注入 4 大分離原則全量 → 策略選擇 | `triz_pc_solve.md` |
+> | 2.2.2-C1 SF 標準解匹配 | **規則引擎** | Su-Field 狀態 → 對應類別標準解 | `triz_engine.get_standards_for_state()` |
+> | 2.2.2-C2 SF 具體化 | **LLM + KB** | 注入匹配的標準解 → 工程方案 | `triz_sf_solve.md` |
+> | 2.2.2-5 品質校驗 | **規則 + 人審** | 檢查工程對映是否違反已知約束 | UI 三 Tab 佈局人審 |
 
-**TRIZ 輸出規格 (固定欄位) (工件: Concept Route 的一部分)**
+**TRIZ 統一輸出規格 (`UnifiedTrizResult`) (工件: Concept Route 的一部分)**
 
 ```yaml
-TRIZ_解法_[編號]:
-  矛盾句: 改善 [X] 惡化 [Y]
-  矛盾類型: [技術矛盾 / 物理矛盾 / Su-Field]   # 規則引擎分類
-  採用原理: [TRIZ 40原理編號與名稱]               # 規則引擎查表推薦
-  推薦來源: [矛盾矩陣 / 分離原則 / 76標準解]     # 標註規則來源
-  抽象策略: [原理的抽象描述]
-  工程對映:                                        # LLM + RAG 具體化
-    - 手段1: [具體機構/材料/佈局]
-    - 手段2: [具體機構/材料/佈局]
-    - 手段3: [具體機構/材料/佈局]
-  具體化佐證:                                      # RAG/Web 來源
-    - [KB-xxx / WEB-xxx 引用ID]
-  代價: [重量/成本/複雜度/維修性]
-  robust評分預估: [Margin/Decoupling/Recoverability]
-  最小實驗: [驗證哪個假設]
+UnifiedTrizResult:
+  contradiction_id: [矛盾 ID]
+  classification:
+    types: [technical, physical, sufield]  # LLM 分類結果（可複選）
+    sufield_state: [incomplete / harmful / insufficient / ...]  # 若為 SF
+    reasoning: [分類推理說明]
+
+  # Path A: 技術矛盾
+  param_mapping:
+    improve_params: [{triz_id: 14, triz_name: "Strength", confidence: "high"}, ...]
+    worsen_params: [{triz_id: 1, triz_name: "Weight", confidence: "high"}, ...]
+  matrix_lookup: [1, 8, 15, 34]  # 矩陣推薦的原理 IDs
+  technical_solutions:
+    - principle_number: 1
+      principle_name: "Segmentation"
+      abstract_strategy: [原理的抽象描述]
+      engineering_mappings: [具體機構/材料/佈局]
+      cost_description: [代價]
+      robust_estimate: {noise_sensitivity: low}
+      experiment_desc: [驗證方式]
+
+  # Path B: 物理矛盾
+  separation_solutions:
+    - separation_type: "space"
+      separation_name: "Separation in Space"
+      strategy: [分離策略]
+      engineering_mappings: [具體手段]
+      cost_description: [代價]
+      experiment_desc: [驗證方式]
+
+  # Path C: Su-Field
+  sufield_solutions:
+    - standard_code: "1.1.1"
+      standard_name: [標準解名稱]
+      sufield_model: [Su-Field 模型描述]
+      engineering_mappings: [具體手段]
+      cost_description: [代價]
+      experiment_desc: [驗證方式]
 ```
 
 ### 2.2.3/2.2.4 子系統定義 + SCAMPER 模組級變形
@@ -1008,7 +1074,7 @@ KT_決策記錄:
 
 ---
 
-**版本**: v1.5
+**版本**: v1.6
 **最後更新**: 2026-02-25
 **適用範圍**: 早期概念設計階段 (從概念發散到主路線決策)
-**重要更新**: 統一命名規範 — Phase I/II/III → Phase 1/2/3, Step 1~8 → Step 1.1~3.3, Gate 1~8 → Gate 1.1~3.3；整合 AutoTRIZ 混合架構（規則骨架 + LLM 生成補足），TRIZ 各步驟標註規則引擎 vs LLM 執行模式；搭配企業知識庫 RAG + 網路文獻搜尋知識增強層。
+**重要更新**: Step 2.2.2 TRIZ 解矛盾升級為三路徑統一求解（`POST /triz/solve`）—— 分類(LLM) → 路由(TC/PC/SF) → 規則引擎查表 + LLM 具體化。新增 5 個 Prompt 模板 + 規則引擎 `triz_engine.py`。模組分工表更新為已實作的規則 vs LLM 分工。`UnifiedTrizResult` 取代舊的平面解法列表。

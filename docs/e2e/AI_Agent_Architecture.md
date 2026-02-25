@@ -1,8 +1,9 @@
 # AI Agent 架構設計：RD Design Copilot E2E 自動化
 
-> **版本**：v1.1 | **日期**：2026-02-25
+> **版本**：v1.2 | **日期**：2026-02-25
 > **目的**：從 AI Agent 角度重新梳理 E2E 流程，定義自動化等級與多代理協作機制，重點解決 RD 路徑依賴問題。
-> **對齊依據**：`RD_Design_Copilot_整合流程.md` v1.4 + `RD_Design_Copilot_State_Machine.md` v1.2
+> **對齊依據**：`RD_Design_Copilot_整合流程.md` v1.6 + `RD_Design_Copilot_State_Machine.md` v1.3
+> **v1.2 更新**：TRIZ Solver Agent 升級為三路徑統一求解架構，反映已實作的 `triz_engine.py` 規則引擎 + `triz_solve_service.py` orchestrator + 5 個 Prompt 模板。
 
 ---
 
@@ -13,7 +14,7 @@
 | Agent | 職責 | 核心能力 | 綁定工具 |
 |-------|------|---------|---------|
 | **Analyst Agent** | 需求解構、索克拉底問答、因果迴路建模、矛盾識別、假設質疑 | 語意理解、結構化拆解、隱含假設偵測 | LLM、Prompt Template、Functional Model Generator |
-| **TRIZ Solver Agent** | AutoTRIZ 規則查表 + LLM 原理具體化 + SCAMPER 變形 | 矛盾矩陣查表、分離原理匹配、76 標準解映射、原理實體化 | TRIZ Knowledge Base (Prompt MD)、LLM、RAG |
+| **TRIZ Solver Agent** | AutoTRIZ 三路徑統一求解 (`POST /triz/solve`) + SCAMPER 變形 | 矛盾分類 (LLM)、參數映射 (LLM+KB)、矩陣查表 (規則引擎)、分離原則注入、76 標準解匹配、原理具體化 (LLM+KB) | `triz_engine.py` (規則引擎)、`triz_solve_service.py` (orchestrator)、5 Prompt Templates、LLM、RAG |
 | **Evaluator Agent** | MUST 規則驗證、KT 決策分析、證據品質評分、Gate 判定 | 規則引擎、加權評分、風險評估 | MUST Rulebook、Evidence Matrix、Risk Register、LLM |
 | **Knowledge Agent** | 企業 RAG 檢索、Web 文獻搜尋、跨域類比、知識回寫 | 向量檢索、Web Scraping、文件分類、Citation 生成 | Vector DB、Web Search API、Document Store |
 
@@ -96,7 +97,7 @@ graph TB
 | **1.3** | **系統建模** (因果迴路 + TRIZ 矛盾 + 斷路點) | 1 | **AI-Driven** | Analyst + TRIZ Solver | 校準矛盾句、確認斷路點 | **高** — 傾向忽略矛盾 | Contradiction, Breakpoint |
 | **2.1** | **假設與驗證規劃** (HDA + 未知集合) | 2 | AI-Assisted | Analyst + Knowledge | 填寫假設台帳、定義未知集合 | 中 | Assumption |
 | **2.2.1** | **Anti-Anchor Sprint** (反路徑依賴) | 2 | **Fully Auto** | Analyst + Knowledge | 審核非典型架構 | **最高** — Anti-Anchor 核心 | — |
-| **2.2.2** | **TRIZ 解矛盾** (矩陣查表 + 原理具體化) | 2 | **Fully Auto** | TRIZ Solver + Knowledge | 僅選擇 | **高** — 解法錨定 | Concept Route (部分) |
+| **2.2.2** | **TRIZ 統一求解** (分類→三路徑路由→具體化, `POST /triz/solve`) | 2 | **Fully Auto** | TRIZ Solver + Knowledge | 僅選擇 | **高** — 解法錨定 | Concept Route (部分) |
 | **2.2.3** | **子系統定義** (受影響子系統識別) | 2 | AI-Driven | Analyst | 確認子系統清單 | 中 | Concept Route (部分) |
 | **2.2.4** | **SCAMPER 模組變形** (每子系統 × 7 動作) | 2 | **Fully Auto** | TRIZ Solver + Knowledge | 僅選擇 | 高 — 變形慣性 | Concept Route (部分) |
 | **2.2.5** | **AI 方案生成** (整合 TRIZ + SCAMPER) | 2 | **AI-Driven** | Analyst + TRIZ Solver | 審核方案規格 | 中 | Concept Route, Interface |
@@ -247,10 +248,13 @@ sequenceDiagram
     EA-->>ORC: Gate 2.2.1 通過
 
     Note over ORC: Step 2.2 內部並行發散
-    par TRIZ 解矛盾 (每條矛盾獨立)
-        ORC->>TA: Step 2.2.2 - 矩陣查表 + 原理具體化
+    par TRIZ 統一求解 (每條矛盾獨立)
+        ORC->>TA: Step 2.2.2 - POST /triz/solve (分類→三路徑→具體化)
+        Note over TA: Path A: 參數映射→矩陣查表→原理具體化
+        Note over TA: Path B: 分離原則 KB→策略選擇
+        Note over TA: Path C: SF 狀態→標準解匹配→具體化
         ORC->>KA: Step 2.2.2 - 佐證搜尋 (專利/文獻)
-        TA-->>ORC: 每條矛盾 ≥3 條工程對映
+        TA-->>ORC: UnifiedTrizResult (TC+PC+SF 三路徑解法)
     and SCAMPER 變形 (每個子系統獨立)
         ORC->>AA: Step 2.2.3 - 子系統定義
         AA-->>ORC: 子系統清單
@@ -311,12 +315,12 @@ sequenceDiagram
 
 | 可並行的組合 | 前置條件 | 說明 |
 |-------------|---------|------|
-| 不同矛盾句的 2.2.2 (TRIZ 解矛盾) | Gate 2.1 通過 + Gate 2.2.1 通過 | 每條矛盾獨立求解 |
+| 不同矛盾句的 2.2.2 (TRIZ 統一求解) | Gate 2.1 通過 + Gate 2.2.1 通過 | 每條矛盾獨立呼叫 `POST /triz/solve`，內部自動完成分類→三路徑→具體化 |
 | 不同子系統的 2.2.4 (SCAMPER 變形) | 2.2.3 子系統清單已定義 | 每個子系統獨立變形 |
 | 2.2.2 (TRIZ) 與 2.2.3→2.2.4 (子系統→SCAMPER) | Gate 2.2.1 通過 | TRIZ 和 SCAMPER 為互補路徑 |
 | Knowledge Agent 預檢索 + 主流程 | 任何 Step | Knowledge Agent 可提前快取 |
 
-> **注意**：2.2.3（子系統定義）依賴 2.2.2（TRIZ 解矛盾）的解法方向指出受影響子系統，但不同矛盾的 2.2.2 可與不同子系統的 2.2.4 並行。所有並行產出匯聚到 2.2.5 (AI 方案生成) 做交叉組合，再由 2.2.6 (MUST 快篩) 統一淘汰。
+> **注意**：每條矛盾的統一求解 (`POST /triz/solve`) 是原子操作——一次呼叫自動完成分類(LLM) → 三路徑路由(TC/PC/SF) → 規則引擎查表 → LLM 具體化，每次最多 4 個 LLM calls。2.2.3（子系統定義）依賴 2.2.2 的解法方向指出受影響子系統，但不同矛盾的 2.2.2 可與不同子系統的 2.2.4 並行。所有並行產出匯聚到 2.2.5 (AI 方案生成) 做交叉組合，再由 2.2.6 (MUST 快篩) 統一淘汰。
 
 ### 4.3 Gate 自動化判定
 
@@ -407,19 +411,32 @@ analyst_agent:
 
 triz_solver_agent:
   llm: claude-sonnet-4-6
-  tools:
-    - triz_parameter_mapper       # Step 1.3 自然語言 → 39 參數
-    - contradiction_matrix_lookup # Step 2.2.2-1 矛盾矩陣查表
-    - separation_principle_match  # Step 2.2.2-2 物理矛盾 → 分離原理
-    - standard_solution_match     # Step 2.2.2-3 Su-Field → 76 標準解
-    - principle_instantiator      # Step 2.2.2-4 抽象原理 → 工程手段
-    - scamper_transformer         # Step 2.2.4 SCAMPER 模組變形
-  knowledge_base:
-    - triz_knowledge_base/01_39_parameters.md
-    - triz_knowledge_base/02_contradiction_matrix.md
-    - triz_knowledge_base/03_40_principles.md
-    - triz_knowledge_base/04_separation_principles.md
-    - triz_knowledge_base/05_76_standard_solutions.md
+  services:
+    - triz_engine              # 規則引擎 (src/services/triz_engine.py)
+      # 啟動時解析 5 個 KB markdown → in-memory 資料結構
+      # API: lookup_matrix(), get_principles(), get_standards_for_state()
+      #       format_params_for_prompt(), format_principles_for_prompt()
+      #       format_separations_for_prompt(), format_standards_for_prompt()
+    - triz_solve_service       # 求解 orchestrator (src/services/triz_solve_service.py)
+      # API: solve(contradiction, constraints, db) → UnifiedTrizResult
+      # 內部流程: _classify() → _map_params() → _solve_technical/physical/sufield()
+  prompts:
+    - triz_classify.md         # Step 2.2.2-0 矛盾分類 (TC/PC/SF)
+    - triz_param_mapping.md    # Step 2.2.2-A1 自然語言 → 39 參數 ID
+    - triz_tc_solve.md         # Step 2.2.2-A4 技術矛盾具體化 (注入矩陣結果+原理詳情)
+    - triz_pc_solve.md         # Step 2.2.2-B1 物理矛盾分離策略 (注入 4 大分離原則)
+    - triz_sf_solve.md         # Step 2.2.2-C2 Su-Field 具體化 (注入匹配的標準解)
+    - scamper_variant.md       # Step 2.2.4 SCAMPER 模組變形
+  knowledge_base:              # 由 triz_engine 解析為 in-memory 結構
+    - triz_knowledge_base/01_39_parameters.md      # 39 params → TrizParam dataclass
+    - triz_knowledge_base/02_contradiction_matrix.md # 39×39 sparse → dict[(int,int), list[int]]
+    - triz_knowledge_base/03_40_principles.md       # 40 principles → TrizPrinciple dataclass
+    - triz_knowledge_base/04_separation_principles.md # 4 types → SeparationPrinciple dataclass
+    - triz_knowledge_base/05_76_standard_solutions.md # 76 standards → StandardSolution dataclass
+  db_models:
+    - TrizSolution             # Path A 技術矛盾解法
+    - SeparationSolution       # Path B 物理矛盾解法
+    - SuFieldSolution          # Path C Su-Field 解法
 
 evaluator_agent:
   llm: claude-sonnet-4-6
@@ -514,7 +531,7 @@ orchestrator_state:
 - [ ] MUST 規則 (M1-M6) 與 MUST_Rulebook_Template.md 一致
 - [ ] Pre-CAD 審查 5 維度與 Pre_CAD_Review_Template.md 一致
 - [ ] Knowledge Agent 的 citation 格式（KB-/WEB-）與整合流程 §1.4 知識引用規範一致
-- [ ] AutoTRIZ 子步驟（2.2.2-1 至 2.2.2-5）與整合流程 §2.2.2 AutoTRIZ 執行模式表一致
+- [ ] AutoTRIZ 統一求解子步驟（2.2.2-0 分類, 2.2.2-A1~A4 技術矛盾, 2.2.2-B1 物理矛盾, 2.2.2-C1~C2 Su-Field）與整合流程 §2.2.2 AutoTRIZ 執行模式表一致
 - [ ] KT 決策在 Step 3.2（非 Step 2.2.6），MUST 快篩在 Step 2.2.6（非 Step 3.2）
 
 ---
