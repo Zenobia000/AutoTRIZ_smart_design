@@ -80,40 +80,35 @@ graph LR
 | Phase Gate 3 (= Gate 3.3) | Step 3.3 → Done | 內部 Gate | **PHASE_3 → COMPLETED** | `check_gate_3_3`: DecisionRecord 已簽核 + 所有 H/H* Risk 有緩解措施 + action_items 非空 | All Core Artifacts: Baslined → Released |
 ## 雙層狀態機概念圖 (Process State + Artifact State)
 
+> **說明**：下方以三個獨立圖呈現雙層狀態機，避免巢狀 subgraph 的渲染相容性問題。
+
+**Process Layer（流程層）**
+
 ```mermaid
-graph TB
-    subgraph Process3_1["Process: Step 3.1 設計審查"]
-        subgraph EM_Artifact["Artifact: Evidence Matrix"]
-            EM_Draft["Draft"] -->|"填寫 EM"| EM_Reviewed["Reviewed"]
-            EM_Reviewed -->|"證據補齊"| EM_Verified["Verified"]
-            EM_Verified -.->|"發現新缺口"| EM_Reviewed
-        end
-        subgraph CR_Artifact["Artifact: Concept Route"]
-            CR_Reviewed["Reviewed"] -->|"證據充足"| CR_Verified["Verified"]
-        end
-        subgraph Risk_Artifact["Artifact: Risk"]
-            Risk_Draft["Draft"] -->|"風險登錄"| Risk_Reviewed["Reviewed"]
-        end
-        subgraph MVP_CAD["Artifact: MVP CAD Model"]
-            CAD_Draft["Draft"] -->|"繪製 MVP CAD"| CAD_Reviewed["Reviewed"]
-        end
-    end
+graph LR
+    S3_1["Step 3.1 設計審查"] -.->|"證據缺口"| S3_1_loop["Step 3.1.loop 證據補齊"]
+    S3_1_loop -.->|"證據更新"| S3_1
+    S3_1 -->|"Phase Gate 2 通過"| S3_2["Step 3.2 決策與行動"]
+```
 
-    subgraph Process3_1_loop["Process: Step 3.1.loop 證據補齊"]
-        subgraph Evid_Artifact["Artifact: Evidence"]
-            Evid_Draft["Draft"] -->|"執行最小實驗"| Evid_Verified["Verified"]
-        end
-    end
+**Artifact Layer — Step 3.1 設計審查**
 
-    subgraph Process3_2["Process: Step 3.2 決策與行動"]
-        subgraph DR_Artifact["Artifact: Decision Record"]
-            DR_Draft["Draft"] -->|"完成 KT Decision"| DR_Reviewed["Reviewed"]
-        end
-    end
+```mermaid
+graph LR
+    EM_D["EM: Draft"] -->|"填寫 EM"| EM_R["EM: Reviewed"]
+    EM_R -->|"證據補齊"| EM_V["EM: Verified"]
+    EM_V -.->|"發現新缺口"| EM_R
+    CR_R["Concept Route: Reviewed"] -->|"證據充足"| CR_V["Concept Route: Verified"]
+    Risk_D["Risk: Draft"] -->|"風險登錄"| Risk_R["Risk: Reviewed"]
+    CAD_D["MVP CAD: Draft"] -->|"繪製 MVP CAD"| CAD_R["MVP CAD: Reviewed"]
+```
 
-    Process3_1 -.->|"發現證據缺口"| Process3_1_loop
-    Process3_1_loop -.->|"證據更新"| Process3_1
-    Process3_1 -->|"Phase Gate 2 通過"| Process3_2
+**Artifact Layer — Step 3.1.loop + Step 3.2**
+
+```mermaid
+graph LR
+    Evid_D["Evidence: Draft"] -->|"執行最小實驗"| Evid_V["Evidence: Verified"]
+    DR_D["Decision Record: Draft"] -->|"完成 KT Decision"| DR_R["Decision Record: Reviewed"]
 ```
 
 ### 平行處理說明
@@ -121,23 +116,19 @@ graph TB
 在 Step 2.2 (創造與調整) 中，針對不同矛盾句或子系統，2.2.2 (TRIZ 統一求解) 和 2.2.4 (SCAMPER 模組變形) 可以並行執行：
 
 ```mermaid
-flowchart LR
-    subgraph "Parallel TRIZ & SCAMPER"
-        subgraph "TRIZ 統一求解 C-001"
-            C001_Input["矛盾句 C-001"] --> TRIZ_C001["2.2.2 POST /triz/solve<br>(分類→TC/PC/SF→具體化)"]
-            TRIZ_C001 --> C001_Result["UnifiedTrizResult<br>TC+PC+SF 解法"]
-        end
-        subgraph "TRIZ 統一求解 C-002"
-            C002_Input["矛盾句 C-002"] --> TRIZ_C002["2.2.2 POST /triz/solve"]
-            TRIZ_C002 --> C002_Result["UnifiedTrizResult"]
-        end
-        subgraph "SCAMPER for Subsystem A"
-            SSA_Input["子系統 A"] --> SCAMPER_SSA["2.2.4 SCAMPER 變形"]
-        end
+graph LR
+    subgraph TRIZ_C001["TRIZ C-001"]
+        C001_Input["矛盾句 C-001"] --> TRIZ_C001_Solve["POST /triz/solve"] --> C001_Result["UnifiedTrizResult"]
     end
-    C001_Result --> S2_2_5_AI_Gen["2.2.5 AI 方案生成"]
-    C002_Result --> S2_2_5_AI_Gen
-    SCAMPER_SSA --> S2_2_5_AI_Gen
+    subgraph TRIZ_C002["TRIZ C-002"]
+        C002_Input["矛盾句 C-002"] --> TRIZ_C002_Solve["POST /triz/solve"] --> C002_Result["UnifiedTrizResult"]
+    end
+    subgraph SCAMPER_A["SCAMPER Subsystem A"]
+        SSA_Input["子系統 A"] --> SCAMPER_SSA["2.2.4 SCAMPER 變形"]
+    end
+    C001_Result --> S2_2_5["2.2.5 AI 方案生成"]
+    C002_Result --> S2_2_5
+    SCAMPER_SSA --> S2_2_5
 ```
 
 每條矛盾的統一求解 (`POST /triz/solve`) 是獨立的——內部自動完成分類、三路徑路由、規則引擎查表和 LLM 具體化，每次最多 4 個 LLM calls。所有並行產出的解法方向與變形最終匯聚到 2.2.5 (AI 方案生成) 做交叉組合，再由 2.2.6 (MUST 快篩) 統一淘汰。
