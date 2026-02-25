@@ -60,24 +60,24 @@ if st.session_state.project_id:
     page = st.sidebar.radio(
         "導航",
         [
-            "Phase I - 任務定義",
-            "Phase I - 索克拉底問答",
-            "Phase I - 矛盾識別",
-            "Phase I - 因果迴路圖",
-            "Phase I - 斷路點識別",
-            "Gate 1",
-            "Phase II - 假設台帳",
-            "Phase II - 未知集合 (U)",
-            "Phase II - TRIZ 解法",
-            "Phase II - SCAMPER 變形",
-            "Phase II - 方案集合",
-            "Phase II - MUST 篩選",
-            "Gate 2",
-            "Phase III - WANT 評分",
-            "Phase III - 風險評估",
-            "Phase III - KT 決策記錄",
-            "Phase III - 最小實驗",
-            "Gate 3",
+            "Step 1.1 - 問題界定",
+            "Step 1.2 - 索克拉底問答",
+            "Step 1.2 - 矛盾識別",
+            "Step 1.3 - 因果迴路圖",
+            "Step 1.3 - 斷路點識別",
+            "Gate 1.1",
+            "Step 2.1 - 假設台帳",
+            "Step 2.1 - 未知集合 (U)",
+            "Step 2.2.2 - TRIZ 解法",
+            "Step 2.2.4 - SCAMPER 變形",
+            "Step 2.2.5 - 方案集合",
+            "Step 2.2.6 - MUST 篩選",
+            "Gate 2.2",
+            "Step 3.2 - WANT 評分",
+            "Step 3.1 - 風險評估",
+            "Step 3.2 - KT 決策記錄",
+            "Step 3.1.loop - 最小實驗",
+            "Gate 3.2",
             "匯出報告",
         ],
     )
@@ -90,8 +90,8 @@ pid = st.session_state.project_id
 
 # ========== PAGES ==========
 
-# --- Phase I: Task Definition ---
-if page == "Phase I - 任務定義":
+# --- Step 1.1: Task Definition ---
+if page == "Step 1.1 - 問題界定":
     st.header("任務定義表")
 
     defn = api.get_definition(pid)
@@ -143,8 +143,8 @@ if page == "Phase I - 任務定義":
             st.success("已儲存")
 
 
-# --- Phase I: Socratic Questions ---
-elif page == "Phase I - 索克拉底問答":
+# --- Step 1.2: Socratic Questions ---
+elif page == "Step 1.2 - 索克拉底問答":
     st.header("索克拉底式提問")
 
     if st.button("AI 生成問題", type="primary"):
@@ -175,8 +175,8 @@ elif page == "Phase I - 索克拉底問答":
                             st.success("已儲存")
 
 
-# --- Phase I: Contradictions ---
-elif page == "Phase I - 矛盾識別":
+# --- Step 1.2: Contradictions ---
+elif page == "Step 1.2 - 矛盾識別":
     st.header("TRIZ 矛盾識別")
 
     if st.button("AI 識別矛盾", type="primary"):
@@ -196,8 +196,8 @@ elif page == "Phase I - 矛盾識別":
         st.info("尚無矛盾。請先完成索克拉底問答，再按「AI 識別矛盾」。")
 
 
-# --- Phase I: Causal Loops ---
-elif page == "Phase I - 因果迴路圖":
+# --- Step 1.3: Causal Loops ---
+elif page == "Step 1.3 - 因果迴路圖":
     st.header("因果迴路圖")
     st.caption("找到耦合點（未知會放大的地方），為 TRIZ 矛盾定義與斷路點識別打基礎。")
 
@@ -291,8 +291,8 @@ elif page == "Phase I - 因果迴路圖":
                     st.rerun()
 
 
-# --- Phase I: Breakpoints ---
-elif page == "Phase I - 斷路點識別":
+# --- Step 1.3: Breakpoints ---
+elif page == "Step 1.3 - 斷路點識別":
     st.header("斷路點識別")
     st.caption("在因果迴路中找到可介入切斷耦合的位置，為解法方向提供指引。")
 
@@ -358,10 +358,10 @@ elif page == "Phase I - 斷路點識別":
                     st.rerun()
 
 
-# --- Gate 1 ---
-elif page == "Gate 1":
-    st.header("Gate 1 檢查")
-    if st.button("執行 Gate 1 檢查", type="primary"):
+# --- Gate 1.1 ---
+elif page == "Gate 1.1":
+    st.header("Gate 1.1 檢查")
+    if st.button("執行 Gate 1.1 檢查", type="primary"):
         result = api.check_gate(pid, 1)
         st.session_state["gate1_result"] = result
     result = st.session_state.get("gate1_result")
@@ -370,13 +370,13 @@ elif page == "Gate 1":
             icon = "✅" if item["passed"] else "❌"
             st.write(f"{icon} {item['item']} {item.get('note', '')}")
         if result["overall_pass"]:
-            st.success("Gate 1 通過！可進入 Phase II")
+            st.success("Gate 1.1 通過！可進入 Phase 2: Diverge")
         else:
-            st.warning("Gate 1 未通過，請補齊缺項")
+            st.warning("Gate 1.1 未通過，請補齊缺項")
 
 
-# --- Phase II: Assumptions ---
-elif page == "Phase II - 假設台帳":
+# --- Step 2.1: Assumptions ---
+elif page == "Step 2.1 - 假設台帳":
     st.header("假設台帳")
 
     ASSUMPTION_TYPES = ["介面/包絡", "系統邊界/架構", "可靠度/壽命", "NVH/體驗", "環境可靠度", "低溫性能", "製程/DFM", "成本", "其他"]
@@ -398,7 +398,7 @@ elif page == "Phase II - 假設台帳":
         a_worst = st.text_area("若假設不成立的影響", height=60, key="new_a_worst")
         a_verify = st.text_area("驗證方法", height=80, key="new_a_verify", placeholder="1) ...\n2) ...\n3) ...")
         a_accept = st.text_area("驗收/判定標準", height=60, key="new_a_accept")
-        a_due = st.text_input("目標完成", key="new_a_due", placeholder="例如：Gate 2 前, Gate 3 前")
+        a_due = st.text_input("目標完成", key="new_a_due", placeholder="例如：Gate 1.2 前, Phase Gate 1 前")
         if st.button("新增假設", type="primary") and a_content:
             api.create_assumption(pid, {
                 "code": a_code, "content": a_content, "assumption_type": a_type,
@@ -464,8 +464,8 @@ elif page == "Phase II - 假設台帳":
                     st.rerun()
 
 
-# --- Phase II: Unknown Factors ---
-elif page == "Phase II - 未知集合 (U)":
+# --- Step 2.1: Unknown Factors ---
+elif page == "Step 2.1 - 未知集合 (U)":
     st.header("未知集合 (U)")
     st.caption("假設台帳管「對/錯」，未知集合管「變/不變」——兩者搭配完整描述早期設計的不確定性。")
 
@@ -533,34 +533,139 @@ elif page == "Phase II - 未知集合 (U)":
                     st.rerun()
 
 
-# --- Phase II: TRIZ ---
-elif page == "Phase II - TRIZ 解法":
-    st.header("TRIZ 解法")
+# --- Step 2.2.2: TRIZ ---
+elif page == "Step 2.2.2 - TRIZ 解法":
+    st.header("TRIZ 統一求解")
+    st.caption("三路徑統一求解：技術矛盾 (矩陣+40原理) / 物理矛盾 (分離原則) / Su-Field (76標準解)")
 
     contradictions = api.list_contradictions(pid)
     if not contradictions:
-        st.info("請先在 Phase I 識別矛盾")
+        st.info("請先在 Step 1.2 識別矛盾")
     else:
-        for c in contradictions:
-            st.subheader(f"{c['code']}: {c['improve_param']} vs {c['worsen_param']}")
-            if st.button(f"生成 TRIZ 解法 ({c['code']})", key=f"triz_{c['id']}"):
-                with st.spinner("AI 正在生成 TRIZ 解法..."):
-                    api.generate_triz(pid, c["id"])
-                st.rerun()
+        selected_c = st.selectbox(
+            "選擇矛盾",
+            options=contradictions,
+            format_func=lambda c: f"{c['code']}: {c['improve_param']} vs {c['worsen_param']}",
+            key="triz_c_select",
+        )
 
-    solutions = api.list_triz(pid)
-    if solutions:
-        st.divider()
-        for s in solutions:
-            with st.expander(f"原理 #{s['principle_number']}: {s['principle_name']}"):
-                st.write(f"**抽象策略**: {s['abstract_strategy']}")
-                st.write(f"**工程對映**: {', '.join(s.get('engineering_mappings', []))}")
-                st.write(f"**代價**: {s.get('cost_description', '')}")
-                st.write(f"**驗證方式**: {s.get('experiment_desc', '')}")
+        if selected_c:
+            st.markdown(f"**工程描述**: {selected_c['engineering_desc']}")
+            if selected_c.get("physical_contradiction"):
+                st.markdown(f"**物理矛盾**: {selected_c['physical_contradiction']}")
+
+            col_solve, col_load = st.columns(2)
+            do_solve = col_solve.button("統一求解", type="primary", key="triz_solve_btn")
+            do_load = col_load.button("載入歷史結果", key="triz_load_btn")
+
+            result = None
+            if do_solve:
+                with st.spinner("AI 正在執行三路徑統一求解（分類 → 路由 → 具體化）..."):
+                    result = api.solve_triz(pid, selected_c["id"])
+                st.session_state["triz_result"] = result
+            elif do_load:
+                try:
+                    result = api.get_triz_result(pid, selected_c["id"])
+                    st.session_state["triz_result"] = result
+                except Exception:
+                    st.warning("此矛盾尚無歷史求解結果")
+
+            result = st.session_state.get("triz_result")
+
+            if result:
+                # Classification badges
+                cls = result.get("classification", {})
+                types = cls.get("types", [])
+                type_labels = {"technical": "TC 技術矛盾", "physical": "PC 物理矛盾", "sufield": "SF Su-Field"}
+                badge_cols = st.columns(len(types) if types else 1)
+                for i, t in enumerate(types):
+                    badge_cols[i].success(type_labels.get(t, t))
+                if cls.get("reasoning"):
+                    with st.expander("分類推理"):
+                        st.write(cls["reasoning"])
+
+                st.divider()
+
+                # Three tabs
+                tab_tc, tab_pc, tab_sf = st.tabs([
+                    "Path A: 技術矛盾 (矩陣 + 40原理)",
+                    "Path B: 物理矛盾 (分離原則)",
+                    "Path C: Su-Field (76標準解)",
+                ])
+
+                with tab_tc:
+                    tc_sols = result.get("technical_solutions", [])
+                    pm = result.get("param_mapping")
+                    ml = result.get("matrix_lookup")
+
+                    if pm:
+                        with st.expander("參數映射軌跡", expanded=True):
+                            pcols = st.columns(2)
+                            pcols[0].markdown("**改善參數**")
+                            for p in pm.get("improve_params", []):
+                                pcols[0].write(f"- #{p['triz_id']} {p['triz_name']} (信心: {p['confidence']})")
+                            pcols[1].markdown("**惡化參數**")
+                            for p in pm.get("worsen_params", []):
+                                pcols[1].write(f"- #{p['triz_id']} {p['triz_name']} (信心: {p['confidence']})")
+
+                    if ml:
+                        st.info(f"矩陣查表結果 → 推薦原理: {', '.join(f'#{x}' for x in ml)}")
+
+                    if tc_sols:
+                        for s in tc_sols:
+                            with st.expander(f"原理 #{s['principle_number']}: {s['principle_name']}"):
+                                st.write(f"**抽象策略**: {s['abstract_strategy']}")
+                                mappings = s.get("engineering_mappings", [])
+                                if mappings:
+                                    st.write(f"**工程對映**: {', '.join(mappings) if isinstance(mappings, list) else mappings}")
+                                st.write(f"**代價**: {s.get('cost_description', '')}")
+                                robust = s.get("robust_estimate", {})
+                                if robust:
+                                    st.write(f"**穩健性**: {json.dumps(robust, ensure_ascii=False)}")
+                                st.write(f"**驗證方式**: {s.get('experiment_desc', '')}")
+                    elif "technical" not in types:
+                        st.info("此矛盾未被分類為技術矛盾，此路徑不適用。")
+                    else:
+                        st.warning("未生成技術矛盾解法（可能參數映射或矩陣查表無結果）。")
+
+                with tab_pc:
+                    sep_sols = result.get("separation_solutions", [])
+                    if sep_sols:
+                        for s in sep_sols:
+                            with st.expander(f"{s['separation_type']}: {s['separation_name']}"):
+                                st.write(f"**分離策略**: {s['strategy']}")
+                                mappings = s.get("engineering_mappings", [])
+                                if mappings:
+                                    st.write(f"**工程對映**: {', '.join(mappings) if isinstance(mappings, list) else mappings}")
+                                st.write(f"**代價**: {s.get('cost_description', '')}")
+                                st.write(f"**驗證方式**: {s.get('experiment_desc', '')}")
+                    elif "physical" not in types:
+                        st.info("此矛盾未被分類為物理矛盾，此路徑不適用。")
+                    else:
+                        st.warning("未生成物理矛盾解法。")
+
+                with tab_sf:
+                    sf_sols = result.get("sufield_solutions", [])
+                    sf_state = cls.get("sufield_state", "")
+                    if sf_state:
+                        st.info(f"Su-Field 狀態: {sf_state}")
+                    if sf_sols:
+                        for s in sf_sols:
+                            with st.expander(f"{s['standard_code']}: {s['standard_name']}"):
+                                st.write(f"**Su-Field 模型**: {s['sufield_model']}")
+                                mappings = s.get("engineering_mappings", [])
+                                if mappings:
+                                    st.write(f"**工程對映**: {', '.join(mappings) if isinstance(mappings, list) else mappings}")
+                                st.write(f"**代價**: {s.get('cost_description', '')}")
+                                st.write(f"**驗證方式**: {s.get('experiment_desc', '')}")
+                    elif "sufield" not in types:
+                        st.info("此矛盾未被分類為 Su-Field 問題，此路徑不適用。")
+                    else:
+                        st.warning("未生成 Su-Field 解法。")
 
 
-# --- Phase II: SCAMPER ---
-elif page == "Phase II - SCAMPER 變形":
+# --- Step 2.2.4: SCAMPER ---
+elif page == "Step 2.2.4 - SCAMPER 變形":
     st.header("SCAMPER 變形")
 
     subsystem = st.text_input("子系統名稱", placeholder="例如：馬達-減速機模組")
@@ -584,8 +689,8 @@ elif page == "Phase II - SCAMPER 變形":
                         st.write(f"**供應風險**: {v.get('supply_risk', '')}")
 
 
-# --- Phase II: Alternatives ---
-elif page == "Phase II - 方案集合":
+# --- Step 2.2.5: Alternatives ---
+elif page == "Step 2.2.5 - 方案集合":
     st.header("方案集合")
 
     if st.button("AI 彙整生成候選方案", type="primary"):
@@ -603,8 +708,8 @@ elif page == "Phase II - 方案集合":
                 st.write(f"**風險**: {json.dumps(a.get('risks', {}), ensure_ascii=False, indent=2)}")
 
 
-# --- Phase II: MUST ---
-elif page == "Phase II - MUST 篩選":
+# --- Step 2.2.6: MUST ---
+elif page == "Step 2.2.6 - MUST 篩選":
     st.header("MUST 篩選")
 
     defn = api.get_definition(pid)
@@ -639,10 +744,10 @@ elif page == "Phase II - MUST 篩選":
                 st.write(f"{icon} {ev['alternative_id'][:8]}... — {'Pass' if ev['overall_pass'] else 'Fail'}")
 
 
-# --- Gate 2 ---
-elif page == "Gate 2":
-    st.header("Gate 2 檢查")
-    if st.button("執行 Gate 2 檢查", type="primary"):
+# --- Gate 2.2 ---
+elif page == "Gate 2.2":
+    st.header("Gate 2.2 檢查")
+    if st.button("執行 Gate 2.2 檢查", type="primary"):
         result = api.check_gate(pid, 2)
         st.session_state["gate2_result"] = result
     result = st.session_state.get("gate2_result")
@@ -651,13 +756,13 @@ elif page == "Gate 2":
             icon = "✅" if item["passed"] else "❌"
             st.write(f"{icon} {item['item']} {item.get('note', '')}")
         if result["overall_pass"]:
-            st.success("Gate 2 通過！可進入 Phase III")
+            st.success("Gate 2.2 通過！可進入 Phase 3: Converge")
         else:
-            st.warning("Gate 2 未通過")
+            st.warning("Gate 2.2 未通過")
 
 
-# --- Phase III: WANT ---
-elif page == "Phase III - WANT 評分":
+# --- Step 3.2: WANT ---
+elif page == "Step 3.2 - WANT 評分":
     st.header("WANT 評分")
 
     # Criteria management
@@ -722,8 +827,8 @@ elif page == "Phase III - WANT 評分":
                 st.metric(name, total)
 
 
-# --- Phase III: Risks ---
-elif page == "Phase III - 風險評估":
+# --- Step 3.1: Risks ---
+elif page == "Step 3.1 - 風險評估":
     st.header("風險評估")
 
     with st.expander("新增風險"):
@@ -754,8 +859,8 @@ elif page == "Phase III - 風險評估":
                 st.write(f"**緩解措施**: {r['mitigation']}")
 
 
-# --- Phase III: KT Decision ---
-elif page == "Phase III - KT 決策記錄":
+# --- Step 3.2: KT Decision ---
+elif page == "Step 3.2 - KT 決策記錄":
     st.header("KT 決策記錄")
 
     decision = api.get_decision(pid)
@@ -798,8 +903,8 @@ elif page == "Phase III - KT 決策記錄":
                 st.rerun()
 
 
-# --- Phase III: Experiments ---
-elif page == "Phase III - 最小實驗":
+# --- Step 3.1.loop: Experiments ---
+elif page == "Step 3.1.loop - 最小實驗":
     st.header("最小實驗計畫")
 
     with st.expander("新增實驗"):
@@ -830,10 +935,10 @@ elif page == "Phase III - 最小實驗":
                     st.rerun()
 
 
-# --- Gate 3 ---
-elif page == "Gate 3":
-    st.header("Gate 3 檢查")
-    if st.button("執行 Gate 3 檢查", type="primary"):
+# --- Gate 3.2 ---
+elif page == "Gate 3.2":
+    st.header("Gate 3.2 檢查")
+    if st.button("執行 Gate 3.2 檢查", type="primary"):
         result = api.check_gate(pid, 3)
         st.session_state["gate3_result"] = result
     result = st.session_state.get("gate3_result")
@@ -842,9 +947,9 @@ elif page == "Gate 3":
             icon = "✅" if item["passed"] else "❌"
             st.write(f"{icon} {item['item']} {item.get('note', '')}")
         if result["overall_pass"]:
-            st.success("Gate 3 通過！專案完成 🎉")
+            st.success("Gate 3.2 通過！專案完成 🎉")
         else:
-            st.warning("Gate 3 未通過")
+            st.warning("Gate 3.2 未通過")
 
 
 # --- Export ---

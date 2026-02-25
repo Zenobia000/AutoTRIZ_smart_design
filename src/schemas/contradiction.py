@@ -21,6 +21,10 @@ class ContradictionResponse(BaseModel):
     engineering_desc: str
     physical_contradiction: str
     source: str
+    contradiction_types: list = []
+    improve_param_id: int | None = None
+    worsen_param_id: int | None = None
+    sufield_state: str = ""
     created_at: datetime
 
     model_config = {"from_attributes": True}

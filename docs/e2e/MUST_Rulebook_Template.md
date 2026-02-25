@@ -1,7 +1,7 @@
 # MUST Rulebook Template (可機器執行)
 
 ## 說明
-此模板用於定義可機器執行的 MUST 條件，作為 RD Design Copilot 流程中 Step 5e (MUST 快篩) 的依據。每條 MUST 規則都應詳細定義其輸入、判定邏輯、所需證據類型及不通過時的處理方式。
+此模板用於定義可機器執行的 MUST 條件，作為 RD Design Copilot 流程中 Step 2.2.6 (MUST 快篩) 的依據。每條 MUST 規則都應詳細定義其輸入、判定邏輯、所需證據類型及不通過時的處理方式。
 
 ## MUST 規則定義
 
@@ -31,4 +31,4 @@
 
 **版本**: v1.0
 **最後更新**: 2026-02-24
-**適用範圍**: RD Design Copilot Step 5e (MUST 快篩)
+**適用範圍**: RD Design Copilot Step 2.2.6 (MUST 快篩)

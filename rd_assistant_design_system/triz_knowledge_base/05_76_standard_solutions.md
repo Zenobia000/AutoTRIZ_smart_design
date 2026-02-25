@@ -1,6 +1,6 @@
 # TRIZ 76 標準解（76 Standard Solutions / Inventive Standards）
 
-> **適用階段**：Step 5a-3 Su-Field 標準解匹配
+> **適用階段**：Step 2.2.4 Su-Field 標準解匹配
 > 本文件為 RD 設計助手在進行物質-場（Su-Field）分析後，自動匹配標準解法的知識庫。
 
 ---

@@ -125,6 +125,12 @@ def update_assumption(pid: str, aid: str, data: dict):
 def list_triz(pid: str):
     return _handle(httpx.get(_url(f"/projects/{pid}/triz"), timeout=TIMEOUT))
 
+def solve_triz(pid: str, contradiction_id: str):
+    return _handle(httpx.post(_url(f"/projects/{pid}/triz/solve"), json={"contradiction_id": contradiction_id}, timeout=TIMEOUT))
+
+def get_triz_result(pid: str, contradiction_id: str):
+    return _handle(httpx.get(_url(f"/projects/{pid}/triz/result/{contradiction_id}"), timeout=TIMEOUT))
+
 def generate_triz(pid: str, contradiction_id: str):
     return _handle(httpx.post(_url(f"/projects/{pid}/triz/generate"), json={"contradiction_id": contradiction_id}, timeout=TIMEOUT))
 

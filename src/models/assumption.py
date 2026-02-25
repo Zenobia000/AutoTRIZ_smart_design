@@ -22,7 +22,7 @@ class Assumption(Base):
     verification_method: Mapped[str] = mapped_column(Text, default="")
     acceptance_criteria: Mapped[str] = mapped_column(Text, default="")
     owner: Mapped[str] = mapped_column(String(100), default="")
-    due_date: Mapped[str] = mapped_column(String(50), default="")  # e.g. "Gate 2 前", "Gate 3 前"
+    due_date: Mapped[str] = mapped_column(String(50), default="")  # e.g. "Gate 1.2 前", "Phase Gate 1 前"
     status: Mapped[str] = mapped_column(String(20), default="Open")  # Open/Planned/Verifying/Verified/Disproved
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

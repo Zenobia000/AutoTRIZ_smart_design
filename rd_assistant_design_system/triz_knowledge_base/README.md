@@ -9,11 +9,11 @@
 
 | 檔案 | 內容 | 筆數 | 用於 Copilot Step |
 |------|------|------|------------------|
-| `01_39_parameters.md` | TRIZ 39 工程參數 | 39 筆 | Step 3 (矛盾定義) |
-| `02_contradiction_matrix.md` | 39×39 矛盾矩陣 | 1,521 格 | Step 5a-1 (查表推薦) |
-| `03_40_principles.md` | TRIZ 40 發明原理 + 子原理 | 40 筆 | Step 5a (原理具體化) |
-| `04_separation_principles.md` | 物理矛盾分離原則 | 4 大類 | Step 5a-2 (分離策略) |
-| `05_76_standard_solutions.md` | Su-Field 76 標準解 | 76 筆 (5 大類) | Step 5a-3 (標準解) |
+| `01_39_parameters.md` | TRIZ 39 工程參數 | 39 筆 | Step 1.3 (矛盾定義) |
+| `02_contradiction_matrix.md` | 39×39 矛盾矩陣 | 1,521 格 | Step 2.2.2 (查表推薦) |
+| `03_40_principles.md` | TRIZ 40 發明原理 + 子原理 | 40 筆 | Step 2.2.2 (原理具體化) |
+| `04_separation_principles.md` | 物理矛盾分離原則 | 4 大類 | Step 2.2.3 (分離策略) |
+| `05_76_standard_solutions.md` | Su-Field 76 標準解 | 76 筆 (5 大類) | Step 2.2.4 (標準解) |
 
 ## 使用方式
 
@@ -22,7 +22,7 @@
 
 ### 方式 2：RAG 檢索注入 (推薦用於矛盾矩陣)
 矛盾矩陣 39×39 佔大量 token，建議：
-1. Step 3 確定改善/惡化參數後
+1. Step 1.3 確定改善/惡化參數後
 2. 僅檢索矩陣中對應的 1-3 行注入上下文
 3. LLM 從候選原理中選擇並具體化
 
@@ -47,12 +47,12 @@
 RD_Design_Copilot_整合流程.md §1.5 AutoTRIZ 混合架構
   │
   ├── 規則引擎區 (本資料夾提供參照表)
-  │   ├── Step 3.4 → 01_39_parameters.md (參數驗證)
-  │   ├── Step 5a-1 → 02_contradiction_matrix.md (查表)
-  │   ├── Step 5a-2 → 04_separation_principles.md (分離)
-  │   └── Step 5a-3 → 05_76_standard_solutions.md (標準解)
+  │   ├── Step 1.3 → 01_39_parameters.md (參數驗證)
+  │   ├── Step 2.2.2 → 02_contradiction_matrix.md (查表)
+  │   ├── Step 2.2.3 → 04_separation_principles.md (分離)
+  │   └── Step 2.2.4 → 05_76_standard_solutions.md (標準解)
   │
   └── LLM 驅動區 (使用參照表作為上下文)
-      ├── Step 3.4 → LLM 翻譯人話→參數 (參考 01)
-      └── Step 5a-4 → LLM 原理具體化 (參考 03)
+      ├── Step 1.3 → LLM 翻譯人話→參數 (參考 01)
+      └── Step 2.2.5 → LLM 原理具體化 (參考 03)
 ```

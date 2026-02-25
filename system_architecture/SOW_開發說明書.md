@@ -26,10 +26,10 @@ RD Design Copilot MVP (v0.5)
 | BE-1 | FastAPI 專案骨架 | 專案結構、設定管理、DB 初始化 |
 | BE-2 | 資料模型 (ORM) | 15 張 table，SQLAlchemy + SQLite |
 | BE-3 | 專案管理 API | 專案 CRUD + 狀態機 |
-| BE-4 | Phase I API | 任務定義表、索克拉底問答、矛盾識別 |
-| BE-5 | Phase II API | 假設台帳、TRIZ、SCAMPER、方案集合、MUST 篩選 |
-| BE-6 | Phase III API | WANT 評分、風險登錄、KT 決策記錄、最小實驗 |
-| BE-7 | Gate 檢查 API | Gate 1/2/3 自動化 checklist |
+| BE-4 | Phase 1: Define API | 任務定義表、索克拉底問答、矛盾識別 |
+| BE-5 | Phase 2: Diverge API | 假設台帳、TRIZ、SCAMPER、方案集合、MUST 篩選 |
+| BE-6 | Phase 3: Converge API | WANT 評分、風險登錄、KT 決策記錄、最小實驗 |
+| BE-7 | Gate 檢查 API | Gate 1.1/Phase Gate 1/Phase Gate 2 自動化 checklist |
 | BE-8 | 匯出 API | Markdown + JSON 匯出 |
 | BE-9 | LLM Service | 統一 AI 呼叫入口，7 個 prompt 模板 |
 
@@ -38,10 +38,10 @@ RD Design Copilot MVP (v0.5)
 |------|---------|------|
 | FE-1 | Streamlit 主框架 | Sidebar 導航 + 狀態指示 |
 | FE-2 | 專案建立頁面 | 需求輸入 + 約束輸入 |
-| FE-3 | Phase I 頁面 (3頁) | 任務定義、索克拉底、矛盾識別 |
-| FE-4 | Phase II 頁面 (5頁) | 假設台帳、TRIZ、SCAMPER、方案集合、MUST |
-| FE-5 | Phase III 頁面 (4頁) | WANT 評分、風險、決策記錄、最小實驗 |
-| FE-6 | Gate 檢查頁面 (3頁) | Gate 1/2/3 checklist 顯示 |
+| FE-3 | Phase 1: Define 頁面 (3頁) | 任務定義、索克拉底、矛盾識別 |
+| FE-4 | Phase 2: Diverge 頁面 (5頁) | 假設台帳、TRIZ、SCAMPER、方案集合、MUST |
+| FE-5 | Phase 3: Converge 頁面 (4頁) | WANT 評分、風險、決策記錄、最小實驗 |
+| FE-6 | Gate 檢查頁面 (3頁) | Gate 1.1/Phase Gate 1/Phase Gate 2 checklist 顯示 |
 | FE-7 | 匯出頁面 | 選擇內容 + 下載 |
 
 #### LLM Prompt 模板
@@ -127,12 +127,12 @@ Streamlit (port 8501) → FastAPI (port 8000) → SQLite (data.db)
 | 驗收項目 | 驗收條件 | 驗證方式 |
 |---------|---------|---------|
 | **AC-1** 專案建立 | 輸入需求後，成功建立專案並生成任務定義表 | 操作驗證 |
-| **AC-2** Phase I 完整 | 任務定義表 → 索克拉底 → 矛盾識別 → Gate 1 通過 | 端到端測試 |
-| **AC-3** Phase II 完整 | 假設台帳 → TRIZ → SCAMPER → 方案集合 → MUST → Gate 2 通過 | 端到端測試 |
-| **AC-4** Phase III 完整 | WANT 評分 → 風險 → 決策記錄 → 簽核 → Gate 3 通過 | 端到端測試 |
+| **AC-2** Phase 1: Define 完整 | 任務定義表 → 索克拉底 → 矛盾識別 → Phase Gate 1 通過 | 端到端測試 |
+| **AC-3** Phase 2: Diverge 完整 | 假設台帳 → TRIZ → SCAMPER → 方案集合 → MUST → Phase Gate 2 通過 | 端到端測試 |
+| **AC-4** Phase 3: Converge 完整 | WANT 評分 → 風險 → 決策記錄 → 簽核 → Phase Gate 3 通過 | 端到端測試 |
 | **AC-5** AI 生成品質 | 任務定義表包含所有必填欄位，TRIZ 解法有工程語言 | 人工審查 |
 | **AC-6** WANT 計算正確 | 加權總分 = Σ(權重 × 分數)，無計算錯誤 | 自動化測試 |
-| **AC-7** Gate 檢查邏輯 | Gate 1/2/3 checklist 正確判斷 pass/fail | 單元測試 |
+| **AC-7** Gate 檢查邏輯 | Phase Gate 1/2/3 checklist 正確判斷 pass/fail | 單元測試 |
 | **AC-8** 匯出完整 | Markdown 報告包含所有 8 個章節 | 操作驗證 |
 | **AC-9** 證據追蹤 | 每個 WANT 評分都有證據欄位，缺證據有警告提示 | 操作驗證 |
 | **AC-10** 風險矩陣 | P×S 計算正確，H* 風險有明確標示 | 單元測試 |
@@ -154,10 +154,10 @@ Streamlit (port 8501) → FastAPI (port 8000) → SQLite (data.db)
 ### 5.1 總時程：30 個工作天
 
 ```
-Week 1 (Day 1-5)    ████████████  M0 + M1: 骨架 + Phase I
-Week 2 (Day 6-10)   ████████████  M2: Phase II (上半)
-Week 3 (Day 11-15)  ████████████  M2 + M3: Phase II (下半) + Phase III (上半)
-Week 4 (Day 16-20)  ████████████  M3: Phase III (下半)
+Week 1 (Day 1-5)    ████████████  M0 + M1: 骨架 + Phase 1: Define
+Week 2 (Day 6-10)   ████████████  M2: Phase 2: Diverge (上半)
+Week 3 (Day 11-15)  ████████████  M2 + M3: Phase 2: Diverge (下半) + Phase 3: Converge (上半)
+Week 4 (Day 16-20)  ████████████  M3: Phase 3: Converge (下半)
 Week 5 (Day 21-25)  ████████████  M4: UI 串接
 Week 6 (Day 26-30)  ████████████  M5 + M6: 測試 + 文件 + 部署
 ```
@@ -167,9 +167,9 @@ Week 6 (Day 26-30)  ████████████  M5 + M6: 測試 + 文�
 | 里程碑 | 時程 | 交付物 | 驗收方式 |
 |--------|------|--------|---------|
 | **M0: 專案骨架** | Day 1-2 | 目錄結構、DB schema、FastAPI 空殼、config | `uvicorn` 可啟動 |
-| **M1: Phase I** | Day 3-5 | 任務定義、索克拉底、矛盾識別 API + prompt | API 可呼叫，回應格式正確 |
-| **M2: Phase II** | Day 6-14 | 假設台帳、TRIZ、SCAMPER、方案集合、MUST API + prompt | MUST 篩選邏輯正確 |
-| **M3: Phase III** | Day 15-20 | WANT、風險、決策記錄、最小實驗、Gate API | WANT 計算正確 |
+| **M1: Phase 1: Define** | Day 3-5 | 任務定義、索克拉底、矛盾識別 API + prompt | API 可呼叫，回應格式正確 |
+| **M2: Phase 2: Diverge** | Day 6-14 | 假設台帳、TRIZ、SCAMPER、方案集合、MUST API + prompt | MUST 篩選邏輯正確 |
+| **M3: Phase 3: Converge** | Day 15-20 | WANT、風險、決策記錄、最小實驗、Gate API | WANT 計算正確 |
 | **M4: UI 串接** | Day 21-25 | Streamlit 全部頁面串接 API | 全流程可在 UI 操作 |
 | **M5: 測試** | Day 26-28 | 單元測試 + API 測試 + 端到端 | 測試全部通過 |
 | **M6: 交付** | Day 29-30 | Docker + README + 真實案例驗證 | 一鍵啟動，跑通真實案例 |
@@ -231,9 +231,9 @@ Week 6 (Day 26-30)  ████████████  M5 + M6: 測試 + 文�
 
 | 術語 | 定義 |
 |------|------|
-| Phase I | 定義問題空間（任務定義 → 索克拉底 → 矛盾識別） |
-| Phase II | 假設與發散（假設台帳 → TRIZ → SCAMPER → 方案集合 → MUST） |
-| Phase III | 收斂與驗證（WANT → 風險 → KT 決策 → 最小實驗） |
+| Phase 1: Define | 定義問題空間（任務定義 → 索克拉底 → 矛盾識別） |
+| Phase 2: Diverge | 假設與發散（假設台帳 → TRIZ → SCAMPER → 方案集合 → MUST） |
+| Phase 3: Converge | 收斂與驗證（WANT → 風險 → KT 決策 → 最小實驗） |
 | Gate | 階段檢查點，滿足 checklist 才進入下一階段 |
 | KT | Kepner-Tregoe 決策分析框架 |
 | MUST | 不可妥協的硬約束，Pass/Fail |

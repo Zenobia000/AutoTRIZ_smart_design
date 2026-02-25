@@ -453,21 +453,21 @@ KT_決策記錄:
 
 # 整合到主流程
 
-## 在 Step 7（決策與行動）中替換原有 Robust 評分
+## 在 Step 3.2（決策與行動）中替換原有 Robust 評分
 
 ```
 原流程:
-  Step 7 → Robust 評分公式 → 最小實驗
+  Step 3.2 → Robust 評分公式 → 最小實驗
 
 新流程:
-  Step 7 → KT Decision Analysis
+  Step 3.2 → KT Decision Analysis
            ├── MUST 篩選（淘汰不合格）
            ├── WANT 評分（加權排序）
            ├── Adverse Consequences（風險調整）
            └── 決策記錄 + 最小實驗
 ```
 
-## Gate 7 更新
+## Gate 3.2 更新
 
 原版：
 > ✅ 假設被驗證

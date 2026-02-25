@@ -1,13 +1,13 @@
 # Evidence Matrix & Risk Register Template
 
 ## 說明
-此文件提供 RD Design Copilot 流程中 Step 6 (設計審查) 所需的 Evidence Matrix 和 Risk Register 模板。這些模板旨在結構化證據追蹤、風險管理，並連結至數位線索中的核心工件。
+此文件提供 RD Design Copilot 流程中 Step 3.1 (設計審查) 所需的 Evidence Matrix 和 Risk Register 模板。這些模板旨在結構化證據追蹤、風險管理，並連結至數位線索中的核心工件。
 
 ---
 
 ## 1. Evidence Matrix Template (工件: Evidence Matrix)
 
-**Purpose**: To track the evidence status and gaps for each concept route, ensuring decisions are evidence-driven. This matrix is the primary output of Step 6.
+**Purpose**: To track the evidence status and gaps for each concept route, ensuring decisions are evidence-driven. This matrix is the primary output of Step 3.1.
 
 | 欄位 ID | 欄位名稱 | 數據類型 | 說明 | 範例內容 |
 |---|---|---|---|---|
@@ -17,7 +17,7 @@
 | `Current_Evidence_ID` | **目前證據 (Artifact ID)** | String | 指向 `Evidence` 工件的 ID (e.g., `Sim-Torque001`, `Exp-Motor001`, `DFM-Review001`)。若有多個證據，可列出主要或最新 ID。 | `Sim-Torque001` |
 | `Evidence_Quality` | **證據品質 (E0-E4)** | Enum | 評估證據的可靠性等級。 <br> **E0**: 只有推論 <br> **E1**: 有計算/估算 <br> **E2**: 有仿真或 Bench Test <br> **E3**: 有實測 (接近真實情境) <br> **E4**: 量產條件下證據 | `E1` |
 | `Evidence_Gap` | **證據缺口** | String | 若證據品質不足 (e.g., E0/E1)，簡潔描述缺口為何。 | `實際馬達響應數據不足` |
-| `Next_Min_Experiment_ID` | **下一步最小實驗 (Artifact ID)** | String | 指向用於補足證據缺口的 `Evidence` 工件 ID (e.g., `Exp-Motor001`)。此即 Step 6e 的行動計畫。 | `Exp-Motor001` |
+| `Next_Min_Experiment_ID` | **下一步最小實驗 (Artifact ID)** | String | 指向用於補足證據缺口的 `Evidence` 工件 ID (e.g., `Exp-Motor001`)。此即 Step 3.1.loop 的行動計畫。 | `Exp-Motor001` |
 | `Owner` | **Owner** | String | 負責補足該證據缺口的團隊成員 | `張三` |
 | `Due_Date` | **Due** | Date | 補足證據的預計完成日期 | `2026-03-15` |
 | `Status` | **狀態** | Enum | (Pending, In Progress, Completed, Blocked) | `Pending` |
@@ -48,4 +48,4 @@
 
 **版本**: v1.0
 **最後更新**: 2026-02-24
-**適用範圍**: RD Design Copilot Step 6 (設計審查)
+**適用範圍**: RD Design Copilot Step 3.1 (設計審查)

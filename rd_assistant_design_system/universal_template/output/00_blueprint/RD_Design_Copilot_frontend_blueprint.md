@@ -557,7 +557,7 @@ interface ApiResponse<T> {
 #### 認知負荷優化
 - **決策點數量**：從模糊、無限的決策點，收斂到 KT 決策分析框架下有限且有證據支撐的決策點。
 - **每頁專注度**：每個頁面或功能模塊聚焦於一個核心任務（例如：任務定義頁面、假設台帳頁面、方案探索頁面）。
-- **資訊分層**：透過清晰的流程階段（Phase I-III）和工件生命週期管理，將複雜資訊分層呈現。
+- **資訊分層**：透過清晰的流程階段（Phase 1-3）和工件生命週期管理，將複雜資訊分層呈現。
 
 #### 架構模式
 - **選擇：** 混合架構 — **理由：** 主體導航採用層級結構以符合專案管理邏輯，而核心設計流程則以中心輻射模式支持迭代發散與收斂。
@@ -570,22 +570,22 @@ interface ApiResponse<T> {
 
 ```mermaid
 graph TB
-    subgraph "Phase I: 定義問題空間"
-        S1_IA[Step 1: 問題界定<br/>Constraint] --> S2_IA[Step 2: 理解全貌<br/>Contradiction, Assumption]
-        S2_IA --> S3_IA[Step 3: 系統建模<br/>Contradiction, Breakpoint]
+    subgraph "Phase 1: Define"
+        S1_1_IA[Step 1.1: 問題界定<br/>Constraint] --> S1_2_IA[Step 1.2: 理解全貌<br/>Contradiction, Assumption]
+        S1_2_IA --> S1_3_IA[Step 1.3: 系統建模<br/>Contradiction, Breakpoint]
     end
-    subgraph "Phase II: 假設與發散"
-        S4_IA[Step 4: 假設與驗證規劃<br/>Assumption] --> S5_IA[Step 5: 創造與調整<br/>Concept Route, Interface]
-        S5_IA --> SP_IA[Step P: Pre-CAD 設計審查<br/>Pre-CAD Review Report]
+    subgraph "Phase 2: Diverge"
+        S2_1_IA[Step 2.1: 假設與驗證規劃<br/>Assumption] --> S2_2_IA[Step 2.2: 創造與調整<br/>Concept Route, Interface]
+        S2_2_IA --> S2_3_IA[Step 2.3: Pre-CAD 設計審查<br/>Pre-CAD Review Report]
     end
-    subgraph "Phase III: 收斂與驗證"
-        S6_IA[Step 6: 設計審查<br/>Evidence Matrix, Risk] --> S6e_IA[Step 6e: 證據補齊<br/>Evidence]
-        S6e_IA --> S6_IA
-        S6_IA --> S7_IA[Step 7: 決策與行動<br/>Decision Record]
-        S7_IA --> S8_IA[Step 8: 內化與傳達<br/>Asset]
+    subgraph "Phase 3: Converge"
+        S3_1_IA[Step 3.1: 設計審查<br/>Evidence Matrix, Risk] --> S3_1_loop_IA[Step 3.1.loop: 證據補齊<br/>Evidence]
+        S3_1_loop_IA --> S3_1_IA
+        S3_1_IA --> S3_2_IA[Step 3.2: 決策與行動<br/>Decision Record]
+        S3_2_IA --> S3_3_IA[Step 3.3: 內化與傳達<br/>Asset]
     end
-    S3_IA --> S4_IA
-    SP_IA --> S6_IA
+    S1_3_IA --> S2_1_IA
+    S2_3_IA --> S3_1_IA
 ```
 
 ### 11.2 頁面總覽矩陣
@@ -637,22 +637,22 @@ graph LR
 
 ```mermaid
 graph TD
-    Start([用戶啟動專案]) --> A{Gate 1: 任務定義明確?}
+    Start([用戶啟動專案]) --> A{Gate 1.1: 任務定義明確?}
     A -->|否| End([重新定義任務])
-    A -->|是| B{Gate 3: 系統建模完成，矛盾明確?}
+    A -->|是| B{Phase Gate 1: 系統建模完成，矛盾明確?}
     B -->|否| End
-    B -->|是| C{Gate P: Pre-CAD 審查通過，候選方案收斂?}
+    B -->|是| C{Gate 2.2: Pre-CAD 審查通過，候選方案收斂?}
     C -->|否| End
-    C -->|是| D{Gate C: CAD 審查通過，證據充足?}
+    C -->|是| D{Phase Gate 2: CAD 審查通過，證據充足?}
     D -->|否| D6e{證據補齊?}
     D6e -->|是| D
     D6e -->|否| End
-    D -->|是| E{Gate 7: KT 決策完成，主路線選定?}
+    D -->|是| E{Gate 3.2: KT 決策完成，主路線選定?}
     E -->|否| End
     E -->|是| F([完成專案，知識沉澱])
 ```
 
-**總決策點：** 5 個主要 Gate (Gate 1, 3, P, C, 7) + 1 個迴圈決策 (Gate 6e: 證據補齊)。
+**總決策點：** 5 個主要 Gate (Gate 1.1, Phase Gate 1, Gate 2.2, Phase Gate 2, Gate 3.2) + 1 個迴圈決策 (Step 3.1.loop: 證據補齊)。
 
 ---
 

@@ -1,10 +1,10 @@
-"""Project state machine: DRAFT → PHASE_I → PHASE_II → PHASE_III → COMPLETED"""
+"""Project state machine: DRAFT → PHASE_1 → PHASE_2 → PHASE_3 → COMPLETED"""
 
 VALID_TRANSITIONS = {
-    "DRAFT": ["PHASE_I"],
-    "PHASE_I": ["PHASE_II"],
-    "PHASE_II": ["PHASE_III"],
-    "PHASE_III": ["COMPLETED"],
+    "DRAFT": ["PHASE_1"],
+    "PHASE_1": ["PHASE_2"],
+    "PHASE_2": ["PHASE_3"],
+    "PHASE_3": ["COMPLETED"],
     "COMPLETED": [],
 }
 

@@ -8,9 +8,9 @@
 ```
 1.0 RD Design Copilot MVP
 ├── 1.1 專案初始化
-├── 1.2 Backend - Phase I
-├── 1.3 Backend - Phase II
-├── 1.4 Backend - Phase III
+├── 1.2 Backend - Phase 1: Define
+├── 1.3 Backend - Phase 2: Diverge
+├── 1.4 Backend - Phase 3: Converge
 ├── 1.5 Backend - 橫切功能
 ├── 1.6 LLM Prompt 開發
 ├── 1.7 Frontend UI
@@ -40,7 +40,7 @@
 
 ---
 
-### 1.2 Backend - Phase I (Day 3-5)
+### 1.2 Backend - Phase 1: Define (Day 3-5)
 
 | WBS | 任務 | 產出 | 工時 | 前置 |
 |-----|------|------|------|------|
@@ -52,14 +52,14 @@
 | 1.2.6 | 索克拉底問答 - LLM 生成端點 | POST /questions/generate | 0.5d | 1.2.5, 1.6.2 |
 | 1.2.7 | 矛盾識別 - API + Service | routers/contradictions.py | 0.5d | 1.2.1 |
 | 1.2.8 | 矛盾識別 - LLM 識別端點 | POST /contradictions/identify | 0.5d | 1.2.7, 1.6.3 |
-| 1.2.9 | Gate 1 檢查邏輯 | services/gate_service.py (gate_1) | 0.25d | 1.2.4 |
-| 1.2.10 | Phase I 整合驗證 | API 端到端可跑通 | 0.25d | 1.2.9 |
+| 1.2.9 | Gate 1.1 檢查邏輯 | services/gate_service.py (gate_1_1) | 0.25d | 1.2.4 |
+| 1.2.10 | Phase 1: Define 整合驗證 | API 端到端可跑通 | 0.25d | 1.2.9 |
 
 **小計: 4.5d → 壓縮至 3d (並行)**
 
 ---
 
-### 1.3 Backend - Phase II (Day 6-14)
+### 1.3 Backend - Phase 2: Diverge (Day 6-14)
 
 | WBS | 任務 | 產出 | 工時 | 前置 |
 |-----|------|------|------|------|
@@ -76,14 +76,14 @@
 | 1.3.11 | 方案集合 - 狀態管理 | candidate/must_pass/must_fail/selected/backup/eliminated | 0.25d | 1.3.9 |
 | 1.3.12 | MUST 篩選 - API + 評估邏輯 | routers/must.py | 0.5d | 1.3.9 |
 | 1.3.13 | MUST 篩選 - Pass/Fail 計算 | 任一 MUST 不過 = 淘汰 | 0.25d | 1.3.12 |
-| 1.3.14 | Gate 2 檢查邏輯 | services/gate_service.py (gate_2) | 0.25d | 1.3.13 |
-| 1.3.15 | Phase II 整合驗證 | API 端到端可跑通 | 0.5d | 1.3.14 |
+| 1.3.14 | Gate 2.1 檢查邏輯 | services/gate_service.py (gate_2_1) | 0.25d | 1.3.13 |
+| 1.3.15 | Phase 2: Diverge 整合驗證 | API 端到端可跑通 | 0.5d | 1.3.14 |
 
 **小計: 6.75d → 壓縮至 5d (並行)**
 
 ---
 
-### 1.4 Backend - Phase III (Day 15-20)
+### 1.4 Backend - Phase 3: Converge (Day 15-20)
 
 | WBS | 任務 | 產出 | 工時 | 前置 |
 |-----|------|------|------|------|
@@ -99,8 +99,8 @@
 | 1.4.10 | KT 決策記錄 - API + Service | routers/decisions.py | 0.5d | 1.4.4, 1.4.8 |
 | 1.4.11 | KT 決策記錄 - LLM 草稿生成 | POST /decisions/generate | 0.5d | 1.4.10, 1.6.7 |
 | 1.4.12 | KT 決策記錄 - 簽核邏輯 | PUT /decisions/signoff | 0.25d | 1.4.10 |
-| 1.4.13 | Gate 3 檢查邏輯 | services/gate_service.py (gate_3) | 0.5d | 1.4.5, 1.4.8, 1.4.12 |
-| 1.4.14 | Phase III 整合驗證 | API 端到端可跑通 | 0.5d | 1.4.13 |
+| 1.4.13 | Gate 3.1 檢查邏輯 | services/gate_service.py (gate_3_1) | 0.5d | 1.4.5, 1.4.8, 1.4.12 |
+| 1.4.14 | Phase 3: Converge 整合驗證 | API 端到端可跑通 | 0.5d | 1.4.13 |
 
 **小計: 5.5d → 壓縮至 4d (並行)**
 
@@ -147,19 +147,19 @@
 | 1.7.2 | 狀態管理 (session_state) | 專案資料快取 | 0.25d | 1.7.1 |
 | 1.7.3 | API Client 封裝 | ui/api_client.py | 0.5d | 1.7.1 |
 | 1.7.4 | 首頁 - 專案建立 | 需求輸入 + 約束輸入 | 0.5d | 1.7.3 |
-| 1.7.5 | Phase I - 任務定義表頁面 | AI 生成 → 編輯 → 確認 | 0.5d | 1.7.3 |
-| 1.7.6 | Phase I - 索克拉底問答頁面 | 問題顯示 + 回答輸入 | 0.5d | 1.7.3 |
-| 1.7.7 | Phase I - 矛盾識別頁面 | 矛盾列表 + 確認 | 0.25d | 1.7.3 |
-| 1.7.8 | Phase II - 假設台帳頁面 | data_editor 可編輯表格 | 0.5d | 1.7.3 |
-| 1.7.9 | Phase II - TRIZ 解法頁面 | 解法展示 + expander | 0.5d | 1.7.3 |
-| 1.7.10 | Phase II - SCAMPER 變形頁面 | 七欄表格展示 | 0.5d | 1.7.3 |
-| 1.7.11 | Phase II - 方案集合頁面 | 方案卡片 + expander | 0.5d | 1.7.3 |
-| 1.7.12 | Phase II - MUST 篩選頁面 | checkbox 表格 + 結果 | 0.5d | 1.7.3 |
-| 1.7.13 | Phase III - WANT 評分頁面 | 權重設定 + 評分表格 + 證據欄 | 1d | 1.7.3 |
-| 1.7.14 | Phase III - 風險評估頁面 | 風險表格 + 矩陣顯示 | 0.5d | 1.7.3 |
-| 1.7.15 | Phase III - KT 決策記錄頁面 | 完整決策記錄 + 簽核 | 1d | 1.7.3 |
-| 1.7.16 | Phase III - 最小實驗頁面 | 實驗表單 | 0.25d | 1.7.3 |
-| 1.7.17 | Gate 檢查頁面 (1/2/3) | checklist 展示 | 0.5d | 1.7.3 |
+| 1.7.5 | Phase 1 - 任務定義表頁面 | AI 生成 → 編輯 → 確認 | 0.5d | 1.7.3 |
+| 1.7.6 | Phase 1 - 索克拉底問答頁面 | 問題顯示 + 回答輸入 | 0.5d | 1.7.3 |
+| 1.7.7 | Phase 1 - 矛盾識別頁面 | 矛盾列表 + 確認 | 0.25d | 1.7.3 |
+| 1.7.8 | Phase 2 - 假設台帳頁面 | data_editor 可編輯表格 | 0.5d | 1.7.3 |
+| 1.7.9 | Phase 2 - TRIZ 解法頁面 | 解法展示 + expander | 0.5d | 1.7.3 |
+| 1.7.10 | Phase 2 - SCAMPER 變形頁面 | 七欄表格展示 | 0.5d | 1.7.3 |
+| 1.7.11 | Phase 2 - 方案集合頁面 | 方案卡片 + expander | 0.5d | 1.7.3 |
+| 1.7.12 | Phase 2 - MUST 篩選頁面 | checkbox 表格 + 結果 | 0.5d | 1.7.3 |
+| 1.7.13 | Phase 3 - WANT 評分頁面 | 權重設定 + 評分表格 + 證據欄 | 1d | 1.7.3 |
+| 1.7.14 | Phase 3 - 風險評估頁面 | 風險表格 + 矩陣顯示 | 0.5d | 1.7.3 |
+| 1.7.15 | Phase 3 - KT 決策記錄頁面 | 完整決策記錄 + 簽核 | 1d | 1.7.3 |
+| 1.7.16 | Phase 3 - 最小實驗頁面 | 實驗表單 | 0.25d | 1.7.3 |
+| 1.7.17 | Gate 檢查頁面 (Phase Gate 1/2/3) | checklist 展示 | 0.5d | 1.7.3 |
 | 1.7.18 | 匯出報告頁面 | 選擇內容 + download_button | 0.25d | 1.7.3 |
 | 1.7.19 | UI 整合測試 (全流程點擊) | — | 0.5d | 1.7.4-1.7.18 |
 
@@ -214,9 +214,9 @@
         Day:  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30
               │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │  │
 1.1 初始化    ████
-1.2 Phase I        ██████████
-1.3 Phase II                  ██████████████████████████████
-1.4 Phase III                                                ████████████████████
+1.2 Phase 1        ██████████
+1.3 Phase 2                  ██████████████████████████████
+1.4 Phase 3                                                ████████████████████
 1.5 橫切功能     ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 1.6 Prompt       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 1.7 UI                                                                           ██████████████████
@@ -234,9 +234,9 @@
 | WBS 大類 | 估算工時 | 壓縮後工時 | 佔比 |
 |---------|---------|-----------|------|
 | 1.1 初始化 | 3.5d | 2d | 7% |
-| 1.2 Phase I | 4.5d | 3d | 10% |
-| 1.3 Phase II | 6.75d | 5d | 17% |
-| 1.4 Phase III | 5.5d | 4d | 13% |
+| 1.2 Phase 1: Define | 4.5d | 3d | 10% |
+| 1.3 Phase 2: Diverge | 6.75d | 5d | 17% |
+| 1.4 Phase 3: Converge | 5.5d | 4d | 13% |
 | 1.5 橫切功能 | 3.75d | (穿插) | — |
 | 1.6 Prompt | 4.75d | (穿插) | — |
 | 1.7 UI | 9.5d | 5d | 17% |
@@ -253,7 +253,7 @@
 ## 關鍵路徑
 
 ```
-1.1 初始化 → 1.2 Phase I → 1.3 Phase II → 1.4 Phase III → 1.7 UI → 1.8 測試 → 1.9 部署 → 1.10 驗收
+1.1 初始化 → 1.2 Phase 1: Define → 1.3 Phase 2: Diverge → 1.4 Phase 3: Converge → 1.7 UI → 1.8 測試 → 1.9 部署 → 1.10 驗收
 ```
 
 任何一個環節延遲都會影響最終交付。最高風險在：

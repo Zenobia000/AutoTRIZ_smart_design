@@ -1,7 +1,7 @@
 # Pre-CAD Review Report Template
 
 ## 說明
-此模板用於 RD Design Copilot 流程中 Gate P (Pre-CAD Gate) 的審查。其目的在於發想階段利用「可驗證的最小資訊」篩選和縮減候選設計方案，並在投入大量 CAD 繪製和詳細模擬之前，淘汰不具可行性的方案。
+此模板用於 RD Design Copilot 流程中 Gate 2.2 (Pre-CAD Gate) 的審查。其目的在於發想階段利用「可驗證的最小資訊」篩選和縮減候選設計方案，並在投入大量 CAD 繪製和詳細模擬之前，淘汰不具可行性的方案。
 
 ## Pre-CAD 審查表
 
@@ -38,7 +38,7 @@
 
 **後續行動**：
 *   進行 MVP CAD 繪製，聚焦在核心結構和關鍵介面。
-*   針對 M3 和 M6 的挑戰，規劃 Step 6e 的最小實驗。
+*   針對 M3 和 M6 的挑戰，規劃 Step 3.1.loop 的最小實驗。
 
 **審查人**：
 *   [姓名/角色]：__________
@@ -49,4 +49,4 @@
 
 **版本**: v1.0
 **最後更新**: 2026-02-24
-**適用範圍**: RD Design Copilot Gate P (Pre-CAD Gate)
+**適用範圍**: RD Design Copilot Gate 2.2 (Pre-CAD Gate)

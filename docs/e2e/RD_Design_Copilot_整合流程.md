@@ -27,11 +27,11 @@
 
 **高階流程 (PPT/NPI):**
 
-*   **設計發想 (Design Ideation)** → Copilot Phase I & II
-*   **CAD / 模擬驗證 (CAD / Simulation Verification)** → Copilot Phase II & III (特別是 Evidence Closure)
-*   **打樣 / 測試驗證 (Prototyping / Test Verification)** → Copilot Phase III (特別是 Evidence Closure)
-*   **設計審查 (Design Review)** → Copilot Phase III (Step 6 & 7)
-*   **NPI (New Product Introduction)** → Copilot Phase III (Decision & Assetization)
+*   **設計發想 (Design Ideation)** → Copilot Phase 1 & 2
+*   **CAD / 模擬驗證 (CAD / Simulation Verification)** → Copilot Phase 2 & 3 (特別是 Evidence Closure)
+*   **打樣 / 測試驗證 (Prototyping / Test Verification)** → Copilot Phase 3 (特別是 Evidence Closure)
+*   **設計審查 (Design Review)** → Copilot Phase 3 (Step 3.1 & 3.2)
+*   **NPI (New Product Introduction)** → Copilot Phase 3 (Decision & Assetization)
 
 ---
 
@@ -41,7 +41,7 @@
 
 ### 1.1 雙層狀態機
 
-*   **上層：流程狀態機** (即目前的 Step 1~8) - 描述團隊活動的推進。
+*   **上層：流程狀態機** (即目前的 Step 1.1~3.3) - 描述團隊活動的推進。
 *   **下層：工件狀態機** - 描述每個設計工件 (Artifact) 的生命週期流轉。
     *   **工件狀態流轉範例**：Draft → Reviewed → Verified (with Evidence) → Baseline → Released
 
@@ -89,15 +89,15 @@ Copilot 在流程各階段透過兩條知識通道，自動注入佐證與補述
 
 | Step | 企業知識庫 RAG 用途 | 網路文獻搜尋用途 |
 |------|-------------------|----------------|
-| **Step 1** 問題界定 | 過往類似案例約束、歷史 KPI 數據 | 產業基準 (benchmark)、法規更新 |
-| **Step 2** 理解全貌 | 歷史假設與驗證結果、內部 know-how | 學術文獻中的失效機制研究 |
-| **Step 3** 系統建模 | FMEA/8D 歷史失效模式、因果數據 | TRIZ 矛盾矩陣參考文獻、跨領域案例 |
-| **Step 4** 假設驗證 | 過往驗證方法與成本紀錄 | 最新測試方法論、量測技術 |
-| **Step 5** 創造調整 | 內部專利庫、過往方案評分紀錄 | 外部專利檢索、新材料/新製程文獻 |
-| **Step P** Pre-CAD | 歷史 DFM 評估報告 | 製程能力參考資料 |
-| **Step 6** 設計審查 | 歷史失效案例比對 (同產品/同模組/同機制) | 材料特性資料庫、仿真參數參考 |
-| **Step 7** 決策行動 | 過往決策記錄與教訓學習 (Lessons Learned) | 競品/產業趨勢佐證 |
-| **Step 8** 內化傳達 | 知識庫回寫 (新增 Lessons Learned) | — |
+| **Step 1.1** 問題界定 | 過往類似案例約束、歷史 KPI 數據 | 產業基準 (benchmark)、法規更新 |
+| **Step 1.2** 理解全貌 | 歷史假設與驗證結果、內部 know-how | 學術文獻中的失效機制研究 |
+| **Step 1.3** 系統建模 | FMEA/8D 歷史失效模式、因果數據 | TRIZ 矛盾矩陣參考文獻、跨領域案例 |
+| **Step 2.1** 假設驗證 | 過往驗證方法與成本紀錄 | 最新測試方法論、量測技術 |
+| **Step 2.2** 創造調整 | 內部專利庫、過往方案評分紀錄 | 外部專利檢索、新材料/新製程文獻 |
+| **Step 2.3** Pre-CAD | 歷史 DFM 評估報告 | 製程能力參考資料 |
+| **Step 3.1** 設計審查 | 歷史失效案例比對 (同產品/同模組/同機制) | 材料特性資料庫、仿真參數參考 |
+| **Step 3.2** 決策行動 | 過往決策記錄與教訓學習 (Lessons Learned) | 競品/產業趨勢佐證 |
+| **Step 3.3** 內化傳達 | 知識庫回寫 (新增 Lessons Learned) | — |
 
 #### 知識引用規範
 
@@ -186,11 +186,11 @@ rd_assistant_design_system/triz_knowledge_base/
 
 | AutoTRIZ 階段 | 對應 Copilot Step | 主要執行方式 |
 |--------------|-------------------|-------------|
-| Problem Structuring | **Step 1-2** (問題界定 + 理解全貌) | LLM 抽取 + 人校準 |
-| Function Model + 矛盾定義 | **Step 3** (系統建模 + TRIZ 矛盾正式化) | LLM 輔助翻譯 + 規則驗證 |
-| 矛盾矩陣/分離/標準解 | **Step 5a** (TRIZ 解矛盾) | 規則引擎查表 |
-| Instantiation + Solution | **Step 5b-5d** (子系統 + SCAMPER + 方案生成) | LLM 生成 + RAG 佐證 |
-| Ranking & Evaluation | **Step 5e / Step 7** (MUST 快篩 / KT 決策) | 規則引擎 + 人審 |
+| Problem Structuring | **Step 1.1-1.2** (問題界定 + 理解全貌) | LLM 抽取 + 人校準 |
+| Function Model + 矛盾定義 | **Step 1.3** (系統建模 + TRIZ 矛盾正式化) | LLM 輔助翻譯 + 規則驗證 |
+| 矛盾矩陣/分離/標準解 | **Step 2.2.2** (TRIZ 解矛盾) | 規則引擎查表 |
+| Instantiation + Solution | **Step 2.2.3-2.2.5** (子系統 + SCAMPER + 方案生成) | LLM 生成 + RAG 佐證 |
+| Ranking & Evaluation | **Step 2.2.6 / Step 3.2** (MUST 快篩 / KT 決策) | 規則引擎 + 人審 |
 
 ---
 
@@ -200,45 +200,45 @@ rd_assistant_design_system/triz_knowledge_base/
 
 | Gate | 位置 | Gate 類型 | Phase 轉換 |
 |------|------|-----------|-----------|
-| Gate 1 | Step 1 完成 | 內部 Gate | **DRAFT → PHASE_I** |
-| Gate 2 | Step 2 完成 | 內部 Gate | Phase I 內部 |
-| Gate 3 | Step 3 完成 | 內部 Gate | **PHASE_I → PHASE_II** |
-| Gate 4 | Step 4 完成 | 內部 Gate | Phase II 內部 |
-| **Gate P** | Step 5 完成 | **Pre-CAD Gate** | Phase II 內部 (產出 MVP CAD 候選集) |
-| **Gate C** | Step 6 完成 | **CAD Gate** | **PHASE_II → PHASE_III** (設計凍結或進入詳細設計) |
-| Gate 7 | Step 7 完成 | 內部 Gate | Phase III 內部 |
-| Gate 8 | Step 8 完成 | 內部 Gate | **PHASE_III → COMPLETED** |
+| Gate 1.1 | Step 1.1 完成 | 內部 Gate | **DRAFT → PHASE_1** |
+| Gate 1.2 | Step 1.2 完成 | 內部 Gate | Phase 1 內部 |
+| Phase Gate 1 (= Gate 1.3) | Step 1.3 完成 | 內部 Gate | **PHASE_1 → PHASE_2** |
+| Gate 2.1 | Step 2.1 完成 | 內部 Gate | Phase 2 內部 |
+| **Gate 2.2** | Step 2.2 完成 | **Pre-CAD Gate** | Phase 2 內部 (產出 MVP CAD 候選集) |
+| **Phase Gate 2 (= Gate 2.3)** | Step 3.1 完成 | **CAD Gate** | **PHASE_2 → PHASE_3** (設計凍結或進入詳細設計) |
+| Gate 3.2 | Step 3.2 完成 | 內部 Gate | Phase 3 內部 |
+| Phase Gate 3 (= Gate 3.3) | Step 3.3 完成 | 內部 Gate | **PHASE_3 → COMPLETED** |
 
 ---
 
 ## 流程總覽 (8 步驟 × 六帽 × SCAMPER/TRIZ)
 
-> **v1.3 更新**：引入 Pre-CAD Gate (Gate P) 與 CAD Gate (Gate C)，將設計審查分層。
+> **v1.3 更新**：引入 Pre-CAD Gate (Gate 2.2) 與 CAD Gate (Phase Gate 2)，將設計審查分層。
 
 ```mermaid
 graph TD
-    subgraph PhaseI ["Phase I: 定義問題空間 (Week 1-2)"]
-        S1["Step 1: 問題界定<br>(白帽)<br>(工件: Constraint)"] --> S2["Step 2: 理解全貌<br>(索克拉底)<br>(工件: Contradiction)"]
-        S2 --> S3["Step 3: 系統建模<br>(藍帽)<br>(工件: Contradiction, Breakpoint)"]
+    subgraph Phase1 ["Phase 1: Define (定義問題空間) (Week 1-2)"]
+        S1["Step 1.1: 問題界定<br>(白帽)<br>(工件: Constraint)"] --> S2["Step 1.2: 理解全貌<br>(索克拉底)<br>(工件: Contradiction)"]
+        S2 --> S3["Step 1.3: 系統建模<br>(藍帽)<br>(工件: Contradiction, Breakpoint)"]
     end
 
-    subgraph PhaseII ["Phase II: 假設與發散 (Week 2-4)"]
-        S4["Step 4: 假設驗證<br>(HDA)<br>+未知集合<br>(工件: Assumption Ledger)"]
-        S5_Main["Step 5: 創造與調整 (綠帽/紅帽)<br>(工件: Concept Route, Interface)"]
-        S_P["Step P: Pre-CAD 審查 (縮減候選集)<br>(工件: Pre-CAD Review Report)"]
+    subgraph Phase2 ["Phase 2: Diverge (假設與發散) (Week 2-4)"]
+        S4["Step 2.1: 假設驗證<br>(HDA)<br>+未知集合<br>(工件: Assumption Ledger)"]
+        S5_Main["Step 2.2: 創造與調整 (綠帽/紅帽)<br>(工件: Concept Route, Interface)"]
+        S_P["Step 2.3: Pre-CAD 審查 (縮減候選集)<br>(工件: Pre-CAD Review Report)"]
 
         S4 --> S5_Main
-        S5_Main --> SP_Gate["Pre-CAD Gate (Gate P)"]
+        S5_Main --> SP_Gate["Pre-CAD Gate (Gate 2.2)"]
         SP_Gate --> S_P
     end
 
-    subgraph PhaseIII ["Phase III: 收斂與驗證 (Week 4-8)"]
-        S6["Step 6: 設計審查<br>(MVP CAD Review)<br>(工件: Evidence Matrix, Risk)"]
-        S6e["Step 6e: 證據補齊<br>(最小實驗/仿真)<br>(工件: Evidence)"]
-        S7["Step 7: 決策行動<br>(KT Decision)<br>(工件: Decision Record)"]
-        S8["Step 8: 內化傳達<br>(費曼)<br>(工件: Asset)"]
+    subgraph Phase3 ["Phase 3: Converge (收斂與驗證) (Week 4-8)"]
+        S6["Step 3.1: 設計審查<br>(MVP CAD Review)<br>(工件: Evidence Matrix, Risk)"]
+        S6e["Step 3.1.loop: 證據補齊<br>(最小實驗/仿真)<br>(工件: Evidence)"]
+        S7["Step 3.2: 決策行動<br>(KT Decision)<br>(工件: Decision Record)"]
+        S8["Step 3.3: 內化傳達<br>(費曼)<br>(工件: Asset)"]
 
-        S_P --> C_Gate["CAD Gate (Gate C)"]
+        S_P --> C_Gate["CAD Gate (Phase Gate 2)"]
         C_Gate --> S6
         S6 --> S6e
         S6e --> S6
@@ -267,22 +267,22 @@ graph TD
 
 ---
 
-# Phase I: 定義問題空間
+# Phase 1: Define (定義問題空間)
 
-## Step 1: 問題界定 (白帽 + 5W1H)
+## Step 1.1: 問題界定 (白帽 + 5W1H)
 
-### 1.1 目的
+### 1.1.1 目的
 把模糊需求變成「可檢查句」，為後續 TRIZ 矛盾定義打基礎。
 **核心工件**：Constraint (Draft)
 
-### 1.2 輸入
+### 1.1.2 輸入
 - 客戶/PM 需求描述
 - 過往類似案例（如有）
 - 空間/成本/製程約束
 - **[RAG]** 企業知識庫中過往類似專案的約束定義、歷史 KPI 達成數據
 - **[Web]** 產業基準 (benchmark) 數據、最新法規與標準要求
 
-### 1.3 AI 協助任務
+### 1.1.3 AI 協助任務
 
 ```yaml
 任務清單:
@@ -291,7 +291,7 @@ graph TD
   - 列出已知事實 vs 未知缺口
 ```
 
-### 1.4 輸出模板
+### 1.1.4 輸出模板
 
 **任務定義表 v1.1 (工件: Constraint)**
 
@@ -303,24 +303,24 @@ graph TD
 | **Non-Goals** | 這版明確不追求的東西 | STRATEGY-003 |
 | **三個最不能失敗指標** | 1. [指標名稱] (判斷方式: [方法]) 2. [指標名稱] (...) 3. [指標名稱] (...) | KPI-001 |
 
-**Gate 1 檢查點**
+**Gate 1.1 檢查點**
 > ✅ 「三個最不能失敗指標」被明確說出，且每個指標有「可量測」或「可判斷」的方式。
 > ✅ 核心工件 Constraint 狀態: Draft -> Reviewed。
 
 ---
 
-## Step 2: 理解全貌 (索克拉底問答)
+## Step 1.2: 理解全貌 (索克拉底問答)
 
-### 2.1 目的
+### 1.2.1 目的
 把「大家以為理所當然」的前提翻出來，為 TRIZ 矛盾識別做準備。
 **核心工件**：Contradiction (Draft), Assumption (Draft)
 
-### 2.2 知識增強輸入
+### 1.2.2 知識增強輸入
 - **[RAG]** 歷史假設台帳中「被推翻的假設」清單，避免重複犯錯
 - **[RAG]** 類似產品的內部 know-how 文件、設計規範
 - **[Web]** 學術文獻中的失效機制研究、產業趨勢報告
 
-### 2.3 索克拉底六類提問 (AI 固定執行)
+### 1.2.3 索克拉底六類提問 (AI 固定執行)
 
 | 類型 | 問題範例 |
 |------|---------|
@@ -331,9 +331,9 @@ graph TD
 | **後果** | 若 NVH 超標，最壞代價是什麼？ |
 | **反思** | 我們現在最可能「自欺欺人」的是哪一條？ |
 
-### 2.4 輸出：矛盾初步識別 (工件: Contradiction)
+### 1.2.4 輸出：矛盾初步識別 (工件: Contradiction)
 
-**矛盾列表 v1.1** (為 Step 3 TRIZ 準備)
+**矛盾列表 v1.1** (為 Step 1.3 TRIZ 準備)
 
 | 編號 | 我想改善 | 但會惡化 | 來源 (假設/情境/數據) |
 |------|---------|---------|--------------------|
@@ -341,25 +341,25 @@ graph TD
 | C2 | 轉速更高 | NVH | R002 (風險) |
 | C3 | 成本更低 | 可靠性 | Constraint-001 |
 
-**Gate 2 檢查點**
+**Gate 1.2 檢查點**
 > ✅ 至少列出 10 條關鍵假設，標出 Top 3「錯了就翻車」的假設。
 > ✅ 至少識別 3 條核心矛盾。
 > ✅ 核心工件 Contradiction, Assumption 狀態: Draft -> Reviewed。
 
 ---
 
-## Step 3: 系統建模 (因果迴路 + TRIZ 矛盾定義)
+## Step 1.3: 系統建模 (因果迴路 + TRIZ 矛盾定義)
 
-### 3.1 目的
+### 1.3.1 目的
 找到耦合點（未知會放大的地方），並將矛盾正式化為 TRIZ 句式。
 **核心工件**：Contradiction (Verified), Breakpoint (Draft)
 
-### 3.2 知識增強輸入
+### 1.3.2 知識增強輸入
 - **[RAG]** FMEA/8D 歷史報告中的失效因果鏈，直接匯入因果迴路圖
 - **[RAG]** 過往專案的耦合點分析結果
 - **[Web]** TRIZ 矛盾矩陣參考文獻、跨領域類比案例 (e.g., 汽車/航太的類似耦合問題)
 
-### 3.3 因果迴路圖建立
+### 1.3.3 因果迴路圖建立
 
 ```mermaid
 flowchart LR
@@ -377,10 +377,10 @@ flowchart LR
     end
 ```
 
-### 3.4 TRIZ 矛盾正式化 (工件: Contradiction)
+### 1.3.4 TRIZ 矛盾正式化 (工件: Contradiction)
 
 > **AutoTRIZ 標註**：此步驟是 TRIZ 流程中「最難規則化」的環節——把口語化的工程問題翻譯成 TRIZ 結構（39 參數、矛盾類型、物理矛盾）。Copilot 使用 **LLM 輔助翻譯 + 規則驗證** 的混合模式：
-> - **LLM 負責**：從 Step 1-2 的自然語言描述中抽取候選改善/惡化參數、判斷矛盾類型
+> - **LLM 負責**：從 Step 1.1-1.2 的自然語言描述中抽取候選改善/惡化參數、判斷矛盾類型
 > - **規則引擎負責**：驗證參數是否為合法的 39 參數、矛盾句式是否完整、是否有重複/遺漏
 > - **人校準**：RD 確認 LLM 產出的矛盾句是否反映真正的工程矛盾
 
@@ -404,7 +404,7 @@ flowchart LR
   物理矛盾: 轉子需要同時「高轉速」和「低振動」
 ```
 
-### 3.5 輸出：斷路點識別 (工件: Breakpoint)
+### 1.3.5 輸出：斷路點識別 (工件: Breakpoint)
 
 | 斷路點編號 | 位置 | 可能解法方向 | TRIZ 原理提示 |
 |--------|------|-------------|--------------|
@@ -412,7 +412,7 @@ flowchart LR
 | BP002 | 控制器 | 雙路徑散熱 | #40複合材料 |
 | BP003 | 裝配界面 | 浮動支撐 | #15動態化 |
 
-**Gate 3 檢查點**
+**Phase Gate 1 (= Gate 1.3) 檢查點**
 > ✅ 明確點名 3 個斷路點，每個斷路點有對應 TRIZ 原理提示。
 > ✅ 每條核心矛盾都有 TRIZ 正式句。
 > ✅ 核心工件 Contradiction 狀態: Reviewed -> Verified。
@@ -420,11 +420,11 @@ flowchart LR
 
 ---
 
-# Phase II: 假設與發散
+# Phase 2: Diverge (假設與發散)
 
-## Step 4: 假設與驗證規劃 (HDA)
+## Step 2.1: 假設與驗證規劃 (HDA)
 
-### 4.1 假設台帳 (Assumption Ledger) (工件: Assumption)
+### 2.1.1 假設台帳 (Assumption Ledger) (工件: Assumption)
 
 **必填 6 欄**
 
@@ -434,7 +434,7 @@ flowchart LR
 | A002 | 裝配偏心 < 0.1mm | Spec-SUP002 (供應商規格) | 共振提前 | CMM 抽檢 | 3天/$200 |
 | A003 | 阻尼器壽命 > 5000hr | Report-LT001 (類似產品報告) | 早期失效 | 加速壽命 | 2週/$1000 |
 
-### 4.2 未知集合 (U) 表達
+### 2.1.2 未知集合 (U) 表達
 
 ```yaml
 未知因子:
@@ -445,24 +445,24 @@ flowchart LR
   u5_供應公差: [穩定, 不穩定]
 ```
 
-**Gate 4 檢查點**
+**Gate 2.1 檢查點**
 > ✅ Top 3 假設每個都有「可在 1-2 週內完成」的驗證設計，包含明確的最小驗證方法、成本與週期。
 > ✅ 核心工件 Assumption 狀態: Reviewed -> Verified。
 
 ---
 
-## Step 5: 創造與調整 (TRIZ → 子系統 → SCAMPER → 方案 → MUST)
+## Step 2.2: 創造與調整 (TRIZ → 子系統 → SCAMPER → 方案 → MUST)
 
-> **這是整合流程的核心步驟**：用 TRIZ 解矛盾找方向，用 SCAMPER 做模組級變形，輸出結構化可審查的方案集合。此階段結束後，產出的候選方案將進入 **Pre-CAD Gate (Step P)** 進行首次收斂。
+> **這是整合流程的核心步驟**：用 TRIZ 解矛盾找方向，用 SCAMPER 做模組級變形，輸出結構化可審查的方案集合。此階段結束後，產出的候選方案將進入 **Pre-CAD Gate (Step 2.3)** 進行首次收斂。
 > **核心工件**：Concept Route (Draft), Interface (Draft)
 
-### 5.0 知識增強輸入
+### 2.2.0 知識增強輸入
 - **[RAG]** 內部專利庫、過往方案的 SCAMPER 變形紀錄與評分結果
 - **[RAG]** 歷史 Concept Route 的成功/失敗原因分析
 - **[Web]** 外部專利檢索 (e.g., Google Patents, Espacenet)，識別可用的解法方向
 - **[Web]** 新材料/新製程文獻、學術期刊中的創新機構設計
 
-### 5.1 Anti-Anchor Sprint (反路徑依賴機制)
+### 2.2.1 Anti-Anchor Sprint (反路徑依賴機制)
 
 **目的**：刻意打破資深 RD 的路徑依賴和對標思維，主動探索非典型架構。
 
@@ -472,40 +472,40 @@ flowchart LR
     3.  不同模組拆分/維修策略概念 (e.g., 模組化快拆, 耗材一體化設計)
 *   **規則**：**至少 1 條必須是「跟競品在物理介面或核心機制上不相容」的路線**。
 
-**Anti-Anchor Gate 檢查點 (Step 5-0 → Step 5a)**
+**Gate 2.2.1 檢查點 (Step 2.2.1 → Step 2.2.2)**
 > ✅ 三條概念路線中，至少有一條是「非對標」且初步判斷能通過 MUST 的 **M1 (空間約束)** 和 **M4 (解耦程度)**。
 
-### 5.2 流程架構 (更新)
+### 2.2.2 流程架構 (更新)
 
 ```mermaid
 graph TD
-    subgraph Step5 ["Step 5: 創造與調整 (更新)"]
-        InputC["矛盾句 (C-001~N)"] --> S5_0["5-0: Anti-Anchor Sprint<br>產出 3 種非典型架構 (至少 1 種非對標)"]
-        InputBP["斷路點 (BP-001~N)"] --> S5_0
-        S5_0 --> AntiAnchorGate{"經 Anti-Anchor Gate 篩選"}
-        AntiAnchorGate --> S5a["5a: TRIZ 解矛盾<br>輸入: 矛盾句<br>輸出: 原理+策略+工程對映"]
+    subgraph Step2_2 ["Step 2.2: 創造與調整 (更新)"]
+        InputC["矛盾句 (C-001~N)"] --> S2_2_1["2.2.1: Anti-Anchor Sprint<br>產出 3 種非典型架構 (至少 1 種非對標)"]
+        InputBP["斷路點 (BP-001~N)"] --> S2_2_1
+        S2_2_1 --> AntiAnchorGate{"經 Gate 2.2.1 篩選"}
+        AntiAnchorGate --> S2_2_2["2.2.2: TRIZ 解矛盾<br>輸入: 矛盾句<br>輸出: 原理+策略+工程對映"]
 
-        S5a --"解法方向<br>(工程對映指出受影響子系統)"--> S5b["5b: 子系統定義<br>(散熱/支撐/傳動/控制器/隔振)"]
-        S5b --"每個子系統"--> S5c["5c: SCAMPER 模組變形<br>對每個子系統 × 7 動作<br>輸出: 七欄規格"]
+        S2_2_2 --"解法方向<br>(工程對映指出受影響子系統)"--> S2_2_3["2.2.3: 子系統定義<br>(散熱/支撐/傳動/控制器/隔振)"]
+        S2_2_3 --"每個子系統"--> S2_2_4["2.2.4: SCAMPER 模組變形<br>對每個子系統 × 7 動作<br>輸出: 七欄規格"]
 
-        S5a --> S5d["5d: AI 方案生成<br>整合 TRIZ + SCAMPER<br>附帶: 機制+假設+風險+robust+最小驗證+Interface Contract"]
-        S5c --> S5d
+        S2_2_2 --> S2_2_5["2.2.5: AI 方案生成<br>整合 TRIZ + SCAMPER<br>附帶: 機制+假設+風險+robust+最小驗證+Interface Contract"]
+        S2_2_4 --> S2_2_5
 
-        S5d --> S5e["5e: MUST 快篩<br>Go/No-Go 淘汰 (可機器執行規則)<br>留下 3-5 條架構級路線"]
+        S2_2_5 --> S2_2_6["2.2.6: MUST 快篩<br>Go/No-Go 淘汰 (可機器執行規則)<br>留下 3-5 條架構級路線"]
     end
 ```
 
-### 5a TRIZ 解矛盾 (每條矛盾執行)
+### 2.2.2 TRIZ 解矛盾 (每條矛盾執行)
 
 > **AutoTRIZ 執行模式**：此步驟分為「規則引擎查表」和「LLM 具體化」兩階段。
 >
 > | 子步驟 | 執行方式 | 動作 |
 > |--------|---------|------|
-> | 5a-1 矛盾矩陣查表 | **規則引擎** | 改善參數 × 惡化參數 → Top-N 推薦原理 |
-> | 5a-2 分離原則映射 | **規則引擎** | 物理矛盾 → 時間/空間/條件/整體局部分離策略 |
-> | 5a-3 Su-Field 標準解 | **規則引擎** | 若為 Su-Field 問題 → 76 標準解匹配 |
-> | 5a-4 原理具體化 | **LLM + RAG** | 把抽象原理翻譯成本領域可執行的工程手段 |
-> | 5a-5 品質校驗 | **規則 + 人審** | 檢查工程對映是否違反已知約束 |
+> | 2.2.2-1 矛盾矩陣查表 | **規則引擎** | 改善參數 × 惡化參數 → Top-N 推薦原理 |
+> | 2.2.2-2 分離原則映射 | **規則引擎** | 物理矛盾 → 時間/空間/條件/整體局部分離策略 |
+> | 2.2.2-3 Su-Field 標準解 | **規則引擎** | 若為 Su-Field 問題 → 76 標準解匹配 |
+> | 2.2.2-4 原理具體化 | **LLM + RAG** | 把抽象原理翻譯成本領域可執行的工程手段 |
+> | 2.2.2-5 品質校驗 | **規則 + 人審** | 檢查工程對映是否違反已知約束 |
 
 **TRIZ 輸出規格 (固定欄位) (工件: Concept Route 的一部分)**
 
@@ -527,7 +527,7 @@ TRIZ_解法_[編號]:
   最小實驗: [驗證哪個假設]
 ```
 
-### 5b/5c 子系統定義 + SCAMPER 模組級變形
+### 2.2.3/2.2.4 子系統定義 + SCAMPER 模組級變形
 
 **對每個子系統執行 SCAMPER**
 
@@ -550,7 +550,7 @@ TRIZ_解法_[編號]:
 | **6. 假設台帳** | 需要哪些前提成立 |
 | **7. 最小驗證** | 用什麼測試打掉不確定 |
 
-### 5d AI 方案生成規格 (工件: Concept Route, Interface)
+### 2.2.5 AI 方案生成規格 (工件: Concept Route, Interface)
 
 **每個方案必須附帶**
 
@@ -595,9 +595,9 @@ TRIZ_解法_[編號]:
     成本: [預估]
 ```
 
-### 5e MUST 快篩 (黑帽篩選) (可機器執行規則)
+### 2.2.6 MUST 快篩 (黑帽篩選) (可機器執行規則)
 
-> **注意**：此階段使用 KT MUST 條件做「快速淘汰」，完整的 WANT 評分在 Step 7 執行。
+> **注意**：此階段使用 KT MUST 條件做「快速淘汰」，完整的 WANT 評分在 Step 3.2 執行。
 
 **MUST Rulebook (可機器執行)**：每條 MUST 規則都將包含 Input 欄位、判定公式、證據類型和 Fail 處置。詳見附錄 A.1。
 
@@ -616,15 +616,15 @@ TRIZ_解法_[編號]:
 
 | 方案 | M1 | M2 | M3 | M4 | M5 | M6 | 結果 | 證據 (Artifact ID) |
 |------|----|----|----|----|----|----|----|--------------------|
-| A | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | → Step 6 | CAD-A001, BOM-A001 |
+| A | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | → Step 3.1 | CAD-A001, BOM-A001 |
 | B | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | **淘汰** | BOM-B001 |
 
 **篩選規則**
 1.  任一 MUST 不通過 = 直接淘汰。
 2.  通過者進入 Set-Based 集合（建議 3-5 條，包含至少 1 條 Anti-Anchor 路線）。
-3.  完整 KT Decision Analysis（MUST+WANT+AC）在 Step 7 執行。
+3.  完整 KT Decision Analysis（MUST+WANT+AC）在 Step 3.2 執行。
 
-**Gate 5 檢查點 (進入 Pre-CAD Gate)**
+**Gate 2.2 檢查點 (進入 Pre-CAD Gate)**
 > ✅ 至少保留 3 條「架構級」路線，其中包含至少 1 條 Anti-Anchor 路線。
 > ✅ 每條路線都有完整的方案規格 (機制、假設、風險、最小驗證)。
 > ✅ 每條路線都產出初步的 **Interface Contract**。
@@ -633,19 +633,19 @@ TRIZ_解法_[編號]:
 
 ---
 
-## Step P: Pre-CAD 設計審查 (Pre-CAD Gate)
+## Step 2.3: Pre-CAD 設計審查 (Pre-CAD Gate)
 
 > **目的**：在投入大量 CAD 繪製和詳細模擬之前，利用「可驗證的最小資訊」篩選和縮減候選設計方案，將發想階段的 20+ 個點子收斂到 3–5 條最優架構路線，避免資源浪費。
 > **核心工件**：Concept Route (Verified), Pre-CAD Review Report (Draft)
 
-### P.1 Pre-CAD 審查內容 (不需要 CAD 的審查)
+### 2.3.1 Pre-CAD 審查內容 (不需要 CAD 的審查)
 
 審查主要基於每條 Concept Route 提供的：
 *   **方案規格** (機制、假設、風險、最小驗證)
 *   **Interface Contract (介面契約草案)**
-*   **MUST 快篩結果** (Step 5e)
+*   **MUST 快篩結果** (Step 2.2.6)
 
-### P.2 Pre-CAD 審查表 (工件: Pre-CAD Review Report)
+### 2.3.2 Pre-CAD 審查表 (工件: Pre-CAD Review Report)
 
 詳情參考 `附錄 A.4: Pre-CAD Review Report 模板`。此模板將引導團隊從以下維度進行審查：
 
@@ -655,12 +655,12 @@ TRIZ_解法_[編號]:
 4.  **主要風險機制 (Failure Mechanism)**：識別方案最可能導致失效的物理機制 (e.g., 污染、磨耗、共振、熱衰退)。
 5.  **最小 CAD 工作量 (MVP CAD Effort)**：評估為進行第一輪粗仿真/干涉檢查，需要繪製哪些最少的幾何模型。
 
-### P.3 Pre-CAD Gate 輸出
+### 2.3.3 Pre-CAD Gate 輸出
 
 *   保留 3–5 條「架構級差異顯著」的 Concept Route。
 *   每條保留路線都需更新其「介面契約草案」並提供「最小驗證計畫」。
 
-**Gate P 檢查點**
+**Gate 2.2 檢查點**
 > ✅ 經 Pre-CAD 審查，候選 Concept Route 已收斂至 3–5 條。
 > ✅ 每條保留路線的 Interface Contract 已更新。
 > ✅ 每條保留路線都明確了下一步進行 MVP CAD 的最小幾何範圍。
@@ -669,16 +669,16 @@ TRIZ_解法_[編號]:
 
 ---
 
-# Phase III: 收斂與驗證
+# Phase 3: Converge (收斂與驗證)
 
-## Step 6: 設計審查 (CAD Gate - MVP CAD Review)
+## Step 3.1: 設計審查 (CAD Gate - MVP CAD Review)
 
-> **核心思想**：針對通過 Gate P 的候選方案，進行 MVP CAD 的初步審查，利用有限的 CAD/模擬成果快速識別潛在的設計缺陷、製造困難或整合問題，並將「證據缺口」轉化為下一步的最小實驗。此階段即為 **CAD Gate (Gate C)**。
+> **核心思想**：針對通過 Gate 2.2 的候選方案，進行 MVP CAD 的初步審查，利用有限的 CAD/模擬成果快速識別潛在的設計缺陷、製造困難或整合問題，並將「證據缺口」轉化為下一步的最小實驗。此階段即為 **CAD Gate (Phase Gate 2)**。
 > **核心工件**：Concept Route (Verified), Evidence Matrix (Draft), Risk (Reviewed), MVP CAD Model (Draft)
 
-### 6.1 Design Review Evidence Matrix (DR EM) (工件: Evidence Matrix)
+### 3.1.1 Design Review Evidence Matrix (DR EM) (工件: Evidence Matrix)
 
-每條方案路線 (3~5 條) 都將對應一張矩陣，其為 Step 6 的主要產出。詳情參考 `附錄 A.2: Evidence Matrix 模板`。
+每條方案路線 (3~5 條) 都將對應一張矩陣，其為 Step 3.1 的主要產出。詳情參考 `附錄 A.2: Evidence Matrix 模板`。
 
 | 類別 | 要求/規格 | 目前證據 (Artifact ID) | 證據品質 (E0-E4) | 證據缺口 (Gap Description) | 下一步最小實驗 (Artifact ID) | Owner | Due |
 | -- | ----- | ---- | ---- | -- | ------- | ----- | --- |
@@ -694,13 +694,13 @@ TRIZ_解法_[編號]:
 *   **E3: 有實測 (接近真實情境)** (Field Test/Near-real-world measurement)
 *   **E4: 量產條件下證據** (Evidence under Mass Production conditions)
 
-### 6.2 知識增強輸入
+### 3.1.2 知識增強輸入
 - **[RAG]** 歷史失效案例庫 (FMEA、8D、Warranty Claim)，自動比對當前方案的失效風險
 - **[RAG]** 過往 Evidence Matrix 填寫紀錄，加速證據分類與缺口識別
 - **[Web]** 材料特性資料庫 (e.g., MatWeb, CES EduPack 公開數據)、仿真參數參考文獻
 - **[Web]** 產業標準中的測試方法與合格基準 (e.g., ISO, IEC, SAE)
 
-### 6.3 歷史失效案例比對 (Failure Mode Transfer)
+### 3.1.3 歷史失效案例比對 (Failure Mode Transfer)
 
 Copilot 的比對策略將分為三層，確保從歷史失效案例中獲取最大洞察：
 
@@ -710,22 +710,22 @@ Copilot 的比對策略將分為三層，確保從歷史失效案例中獲取最
 
 輸出結果將直接與「風險登錄表 (Risk Register)」連結。
 
-### 6.4 生產技術配對 (DFM/DFA Early Assessment)
+### 3.1.4 生產技術配對 (DFM/DFA Early Assessment)
 
-*   **M6 (製造路徑可行性)** 已在 Step 5 的 MUST Rulebook 中進行初步篩選。
-*   在 Step 6，將進行更細緻的 DFM/DFA 評估，例如：Process Window, Cycle Time, 良率風險。
+*   **M6 (製造路徑可行性)** 已在 Step 2.2 的 MUST Rulebook 中進行初步篩選。
+*   在 Step 3.1，將進行更細緻的 DFM/DFA 評估，例如：Process Window, Cycle Time, 良率風險。
 
-### 6.5 公式驗證升級為 Model Card / Assumption Card
+### 3.1.5 公式驗證升級為 Model Card / Assumption Card
 
 針對關鍵模型 (公式/仿真)，產出以下「卡片」以管理其假設與風險：
 
 *   **Model Card**: 適用範圍 (validity range)、關鍵假設 (assumptions)、敏感度 (sensitivity)、驗證方式 (validation plan)、失效模式 (model risk)。
 *   **Assumption Card**: (與 Assumption Ledger 連結)
 
-**Gate C 檢查點 (進入 Phase III)**
+**Phase Gate 2 (= Gate 2.3) 檢查點 (進入 Phase 3)**
 > ✅ 每條方案路線都具備一份經過初步填寫的 **Evidence Matrix** (DR EM) 並隨附 MVP CAD 模型。
-> ✅ **北極星指標** (定義於 Step 1) 的目前證據等級 **≥ E2** (仿真或 Bench Test)。
-> ✅ **Top 10 風險** (定義於 Step 6.6) 都對應到「證據缺口」與「下一步最小實驗」，並指定 Owner 和 Due Date。
+> ✅ **北極星指標** (定義於 Step 1.1) 的目前證據等級 **≥ E2** (仿真或 Bench Test)。
+> ✅ **Top 10 風險** (定義於 Step 3.1.6) 都對應到「證據缺口」與「下一步最小實驗」，並指定 Owner 和 Due Date。
 > ✅ 核心工件 Concept Route 狀態: Reviewed -> Verified (通過 CAD Gate)。
 > ✅ 核心工件 Evidence Matrix 狀態: Draft -> Reviewed。
 > ✅ 核心工件 Risk 狀態: Draft -> Reviewed。
@@ -733,24 +733,24 @@ Copilot 的比對策略將分為三層，確保從歷史失效案例中獲取最
 
 ---
 
-## Step 6e: 證據補齊 (Evidence Closure)
+## Step 3.1.loop: 證據補齊 (Evidence Closure)
 
-**目的**：針對 Step 6 審查中發現的證據缺口，執行快速的最小實驗、仿真或供應商確認，以將證據等級提升至 Gate 7 的要求。這是一個獨立的迴圈，允許設計團隊在不影響主流程推進的情況下，專注於補足關鍵證據。
+**目的**：針對 Step 3.1 審查中發現的證據缺口，執行快速的最小實驗、仿真或供應商確認，以將證據等級提升至 Gate 3.2 的要求。這是一個獨立的迴圈，允許設計團隊在不影響主流程推進的情況下，專注於補足關鍵證據。
 
-*   **觸發條件**：在 Step 6 審查中發現證據缺口，且該缺口屬於「可透過最小實驗在 1-2 週內補足」。
+*   **觸發條件**：在 Step 3.1 審查中發現證據缺口，且該缺口屬於「可透過最小實驗在 1-2 週內補足」。
 *   **活動**：執行最小實驗、快速仿真、供應商數據收集、文獻回顧等。
 *   **輸出**：新的 Evidence (Verified) 工件，更新至 Evidence Matrix。
-*   **迴圈**：完成 Step 6e 後，返回 Step 6 重新審查 Evidence Matrix。
+*   **迴圈**：完成 Step 3.1.loop 後，返回 Step 3.1 重新審查 Evidence Matrix。
 
 ---
 
-## Step 7: 決策與行動 (KT Decision Analysis + 最小實驗)
+## Step 3.2: 決策與行動 (KT Decision Analysis + 最小實驗)
 
 > **重要更新**：本步驟整合 Kepner-Tregoe 決策分析框架，取代原本模糊的 Robust 評分。
 > 完整框架詳見：`KT_Robust_決策框架.md`
 > **核心工件**：Concept Route (Baslined), Decision Record (Draft), Evidence (Verified)
 
-### 7.1 決策原則
+### 3.2.1 決策原則
 
 **選 Robust，不選最優**
 
@@ -761,13 +761,13 @@ Copilot 的比對策略將分為三層，確保從歷史失效案例中獲取最
 - WANT 條件：量化「抗未知能力」（加權評分）
 - Adverse Consequences：確保「風險可控」（風險調整）
 
-### 7.2 KT 決策流程 (四階段)
+### 3.2.2 KT 決策流程 (四階段)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  Stage 1: MUST 篩選                                              │
 │  ┌─────────────────────────────────────────────────────────────┐│
-│  │ 不滿足任一 MUST → 直接淘汰 (已在 Step 5e 執行)                ││
+│  │ 不滿足任一 MUST → 直接淘汰 (已在 Step 2.2.6 執行)             ││
 │  └─────────────────────────────────────────────────────────────┘│
 │                              ↓                                   │
 │  Stage 2: WANT 評分                                              │
@@ -787,11 +787,11 @@ Copilot 的比對策略將分為三層，確保從歷史失效案例中獲取最
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 7.3 MUST 條件 (Go/No-Go) (已在 Step 5e 完成)
+### 3.2.3 MUST 條件 (Go/No-Go) (已在 Step 2.2.6 完成)
 
 **核心原則**：MUST 是「不可妥協」的硬約束，不滿足 = 直接淘汰。
 
-### 7.4 WANT 條件 (加權評分)
+### 3.2.4 WANT 條件 (加權評分)
 
 **核心原則**：WANT 是「希望有但可妥協」的目標，用 權重×滿足程度 計算。
 
@@ -809,7 +809,7 @@ Copilot 的比對策略將分為三層，確保從歷史失效案例中獲取最
 | W6 供應韌性 | 6 | 全通用件 | 關鍵件≥2家 | 多獨家 | SC-Audit-001 |
 | W7 驗證可行性 | 10 | 1週內驗證 | 4週內驗證 | 無法早期驗證 | TestPlan-001 |
 
-### 7.5 Adverse Consequences (風險評估) (工件: Risk)
+### 3.2.5 Adverse Consequences (風險評估) (工件: Risk)
 
 **風險矩陣 (與 Risk Register 連結)**
 
@@ -826,7 +826,7 @@ M  = 需緩解措施
 L  = 可接受
 ```
 
-### 7.6 KT 決策記錄模板 (工件: Decision Record)
+### 3.2.6 KT 決策記錄模板 (工件: Decision Record)
 
 ```yaml
 KT_決策記錄:
@@ -864,11 +864,11 @@ KT_決策記錄:
     審核者: _______________
 ```
 
-### 7.7 最小實驗設計 (已在 Step 6e 閉環)
+### 3.2.7 最小實驗設計 (已在 Step 3.1.loop 閉環)
 
 本階段的最小實驗設計主要用於補足決策所需的最終證據，或確認主路線的關鍵假設。
 
-### 7.8 行動計畫 (三階段) (更新)
+### 3.2.8 行動計畫 (三階段) (更新)
 
 **Phase 1 (Week 1-2): 把混沌變結構**
 - [ ] 需求/限制模板完成
@@ -881,8 +881,8 @@ KT_決策記錄:
 
 **Phase 2 (Week 3-6): 把結構變證據**
 - [ ] 完成 Top 3 最小實驗
-- [ ] **完成 Step 6 Evidence-based Design Review，Evidence Matrix 狀態: Reviewed**
-- [ ] **完成所有 Step 6e 的證據補齊迴圈，北極星指標證據等級 ≥ E2**
+- [ ] **完成 Step 3.1 Evidence-based Design Review，Evidence Matrix 狀態: Reviewed**
+- [ ] **完成所有 Step 3.1.loop 的證據補齊迴圈，北極星指標證據等級 ≥ E2**
 - [ ] 執行 KT Decision Analysis（MUST→WANT→AC）
 - [ ] 更新假設台帳（推翻也要記）
 - [ ] 方案縮到 1-2 條，保留備援
@@ -894,8 +894,8 @@ KT_決策記錄:
 - [ ] 形成「下一案可重用」的 playbook
 - [ ] **所有 Baseline 工件狀態: Baseline -> Released**
 
-**Gate 7 檢查點**
-> ✅ 所有方案都經過 Step 5e MUST 篩選。
+**Gate 3.2 檢查點**
+> ✅ 所有方案都經過 Step 2.2.6 MUST 篩選。
 > ✅ 每個 WANT 評分都有證據 (Artifact ID) 支撐 (不可為 E0)。
 > ✅ 所有 H 風險都有緩解措施，且該措施的證據等級 ≥ E1。
 > ✅ KT 決策記錄完整且已簽核 (Decision Record 狀態: Draft -> Reviewed)。
@@ -904,9 +904,9 @@ KT_決策記錄:
 
 ---
 
-## Step 8: 內化與傳達 (費曼)
+## Step 3.3: 內化與傳達 (費曼)
 
-### 8.0 知識回寫 (Knowledge Writeback)
+### 3.3.0 知識回寫 (Knowledge Writeback)
 
 流程完成後，以下資產自動回寫至企業知識庫，供未來專案 RAG 檢索使用：
 
@@ -919,7 +919,7 @@ KT_決策記錄:
 | MUST/WANT 條件模板 | 約束庫 | 可複用的篩選條件 |
 | Interface Contract (定版) | 介面規範庫 | 標準化介面定義 |
 
-### 8.1 一頁式 (給老闆/跨部門)
+### 3.3.1 一頁式 (給老闆/跨部門)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -942,7 +942,7 @@ KT_決策記錄:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 8.2 RD 團隊 FAQ
+### 3.3.2 RD 團隊 FAQ
 
 | 問題 | 答案 |
 |------|------|
@@ -952,7 +952,7 @@ KT_決策記錄:
 | SCAMPER/TRIZ 不就是喊創意？ | 不是。它們有固定輸出格式，必須附機制、風險、驗證。 |
 | **我為什麼要填 Evidence Matrix？** | 審查不是看你說了什麼，是看你有沒有證據。它幫你追蹤證據缺口與下一步。 |
 
-**Gate 8 檢查點**
+**Phase Gate 3 (= Gate 3.3) 檢查點**
 > ✅ 新人看得懂。
 > ✅ 老闆聽得懂。
 > ✅ 工程師願意用。
@@ -978,7 +978,7 @@ KT_決策記錄:
 
 ## 附錄 A.2: Evidence Matrix 模板
 
-此矩陣作為 Step 6 的主要產出，用於追蹤每個方案的證據狀態和缺口。
+此矩陣作為 Step 3.1 的主要產出，用於追蹤每個方案的證據狀態和缺口。
 
 | 欄位 ID | 欄位名稱 | 數據類型 | 說明 |
 |---------|----------|----------|------|
@@ -1004,11 +1004,11 @@ KT_決策記錄:
 
 ## 附錄 A.4: Pre-CAD Review Report 模板
 
-此模板用於引導團隊在 Pre-CAD Gate (Step P) 進行審查，詳情參考 `Pre_CAD_Review_Template.md` 文件。
+此模板用於引導團隊在 Pre-CAD Gate (Step 2.3) 進行審查，詳情參考 `Pre_CAD_Review_Template.md` 文件。
 
 ---
 
-**版本**: v1.4
-**最後更新**: 2026-02-24
+**版本**: v1.5
+**最後更新**: 2026-02-25
 **適用範圍**: 早期概念設計階段 (從概念發散到主路線決策)
-**重要更新**: 整合 AutoTRIZ 混合架構（規則骨架 + LLM 生成補足），TRIZ 各步驟標註規則引擎 vs LLM 執行模式；搭配企業知識庫 RAG + 網路文獻搜尋知識增強層。
+**重要更新**: 統一命名規範 — Phase I/II/III → Phase 1/2/3, Step 1~8 → Step 1.1~3.3, Gate 1~8 → Gate 1.1~3.3；整合 AutoTRIZ 混合架構（規則骨架 + LLM 生成補足），TRIZ 各步驟標註規則引擎 vs LLM 執行模式；搭配企業知識庫 RAG + 網路文獻搜尋知識增強層。

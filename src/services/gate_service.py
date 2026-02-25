@@ -9,7 +9,7 @@ from src.models.decision import DecisionRecord
 
 
 def check_gate_1(db: Session, project_id: str) -> dict:
-    """Gate 1: 三個最不能失敗指標已定義且有判斷方式"""
+    """Gate 1.1: 三個最不能失敗指標已定義且有判斷方式"""
     defn = db.query(TaskDefinition).filter_by(project_id=project_id).first()
     checks = []
 
@@ -41,7 +41,7 @@ def check_gate_1(db: Session, project_id: str) -> dict:
 
 
 def check_gate_2(db: Session, project_id: str) -> dict:
-    """Gate 2: ≥3 條架構級路線通過 MUST"""
+    """Gate 2.2: ≥3 條架構級路線通過 MUST"""
     passed_alts = (
         db.query(Alternative)
         .filter_by(project_id=project_id)
@@ -70,7 +70,7 @@ def check_gate_2(db: Session, project_id: str) -> dict:
 
 
 def check_gate_3(db: Session, project_id: str) -> dict:
-    """Gate 3: KT 完整 + WANT 有證據 + H 風險有緩解"""
+    """Gate 3.2: KT 完整 + WANT 有證據 + H 風險有緩解"""
     checks = []
 
     # KT decision record exists

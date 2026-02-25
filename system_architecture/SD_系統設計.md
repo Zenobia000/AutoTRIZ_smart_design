@@ -11,7 +11,7 @@
 │ id          TEXT PK  │  (UUID)
 │ name        TEXT     │
 │ description TEXT     │
-│ status      TEXT     │  (DRAFT/PHASE_I/PHASE_II/PHASE_III/COMPLETED)
+│ status      TEXT     │  (DRAFT/PHASE_1/PHASE_2/PHASE_3/COMPLETED)
 │ created_at  DATETIME │
 │ updated_at  DATETIME │
 └──────────┬──────────┘
@@ -338,8 +338,8 @@ class LLMService:
 class GateService:
     """Gate 檢查邏輯"""
 
-    def check_gate_1(self, project_id: str) -> GateResult:
-        """Gate 1: 三個最不能失敗指標已定義且有判斷方式"""
+    def check_phase_gate_1(self, project_id: str) -> GateResult:
+        """Phase Gate 1 (= Gate 1.3): 三個最不能失敗指標已定義且有判斷方式"""
         definition = self.get_definition(project_id)
         checks = []
         checks.append({
@@ -353,8 +353,8 @@ class GateService:
             })
         return GateResult(checklist=checks, overall_pass=all(c["passed"] for c in checks))
 
-    def check_gate_2(self, project_id: str) -> GateResult:
-        """Gate 2: ≥3 條架構級路線通過 MUST"""
+    def check_phase_gate_2(self, project_id: str) -> GateResult:
+        """Phase Gate 2 (= Gate 2.3): ≥3 條架構級路線通過 MUST"""
         alternatives = self.get_alternatives(project_id, status="must_pass")
         checks = [
             {"item": "至少 3 條路線通過 MUST", "passed": len(alternatives) >= 3}
@@ -366,8 +366,8 @@ class GateService:
             })
         return GateResult(checklist=checks, overall_pass=all(c["passed"] for c in checks))
 
-    def check_gate_3(self, project_id: str) -> GateResult:
-        """Gate 3: KT 完整 + WANT 有證據 + H 風險有緩解"""
+    def check_phase_gate_3(self, project_id: str) -> GateResult:
+        """Phase Gate 3 (= Gate 3.3): KT 完整 + WANT 有證據 + H 風險有緩解"""
         ...
 ```
 

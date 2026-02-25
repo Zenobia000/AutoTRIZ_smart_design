@@ -20,7 +20,7 @@
 ┌──────────────────────────▼──────────────────────────────────┐
 │                     Streamlit UI (Port 8501)                  │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐        │
-│  │ Phase I  │ │ Phase II │ │ Phase III│ │ 匯出     │        │
+│  │ Phase 1  │ │ Phase 2  │ │ Phase 3  │ │ 匯出     │        │
 │  │ 定義頁面 │ │ 發散頁面 │ │ 收斂頁面 │ │ 報告頁面 │        │
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘        │
 └──────────────────────────┬──────────────────────────────────┘
@@ -82,15 +82,15 @@
 
 ```
 Project 狀態:
-  DRAFT → PHASE_I → PHASE_II → PHASE_III → COMPLETED
+  DRAFT → PHASE_1 → PHASE_2 → PHASE_3 → COMPLETED
 
 Phase 狀態:
   NOT_STARTED → IN_PROGRESS → GATE_PENDING → GATE_PASSED → COMPLETED
 
 Gate 邏輯:
-  Gate 1: 三個最不能失敗指標已定義 AND 每個有判斷方式
-  Gate 2: ≥3 條架構級路線通過 MUST
-  Gate 3: KT 記錄完整 AND 每個 WANT 有證據 AND 所有 H 風險有緩解
+  Phase Gate 1 (= Gate 1.3): 三個最不能失敗指標已定義 AND 每個有判斷方式
+  Phase Gate 2 (= Gate 2.3): ≥3 條架構級路線通過 MUST
+  Phase Gate 3 (= Gate 3.3): KT 記錄完整 AND 每個 WANT 有證據 AND 所有 H 風險有緩解
 ```
 
 ### 3.2 LLM Service（核心 AI 引擎）

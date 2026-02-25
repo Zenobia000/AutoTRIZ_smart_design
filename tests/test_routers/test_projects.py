@@ -32,15 +32,15 @@ def test_update_project(client):
 def test_state_transition_valid(client):
     r = client.post("/api/v1/projects", json={"name": "Test"})
     pid = r.json()["id"]
-    r = client.put(f"/api/v1/projects/{pid}", json={"status": "PHASE_I"})
+    r = client.put(f"/api/v1/projects/{pid}", json={"status": "PHASE_1"})
     assert r.status_code == 200
-    assert r.json()["status"] == "PHASE_I"
+    assert r.json()["status"] == "PHASE_1"
 
 
 def test_state_transition_invalid(client):
     r = client.post("/api/v1/projects", json={"name": "Test"})
     pid = r.json()["id"]
-    r = client.put(f"/api/v1/projects/{pid}", json={"status": "PHASE_III"})
+    r = client.put(f"/api/v1/projects/{pid}", json={"status": "PHASE_3"})
     assert r.status_code == 400
 
 

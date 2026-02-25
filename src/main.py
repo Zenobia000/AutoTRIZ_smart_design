@@ -40,7 +40,7 @@ def health():
     return {"status": "ok"}
 
 
-# Phase I routers
+# Phase 1: Define routers
 from src.routers import projects, definitions, questions, contradictions, causal_loops, gates
 
 app.include_router(projects.router)
@@ -50,7 +50,7 @@ app.include_router(contradictions.router)
 app.include_router(causal_loops.router)
 app.include_router(gates.router)
 
-# Phase II routers
+# Phase 2: Diverge routers
 from src.routers import assumptions, unknown_factors, triz, scamper, alternatives, must
 
 app.include_router(assumptions.router)
@@ -60,7 +60,7 @@ app.include_router(scamper.router)
 app.include_router(alternatives.router)
 app.include_router(must.router)
 
-# Phase III routers
+# Phase 3: Converge routers
 from src.routers import want, risks, experiments, decisions, export
 
 app.include_router(want.router)

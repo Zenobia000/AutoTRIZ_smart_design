@@ -30,7 +30,7 @@
 | F3.4 Adverse Consequences | **V** | 風險矩陣 |
 | F3.5 KT 決策記錄生成 | **V** | LLM 生成草稿，人簽核 |
 | F3.6 最小實驗設計 | **V** | 結構化表單 |
-| Gate 1/2/3 檢查 | **V** | 簡單 checklist 驗證 |
+| Phase Gate 1/2/3 檢查 | **V** | 簡單 checklist 驗證 |
 
 ### 1.2 不做什麼（Out of Scope for MVP）
 
@@ -52,25 +52,25 @@
 ```
 用戶輸入需求描述
     ↓
-[Phase I] AI 生成任務定義表 → 用戶修改確認
+[Phase 1: Define] AI 生成任務定義表 → 用戶修改確認
     ↓                         → AI 提出索克拉底問題 → 用戶回答
     ↓                         → AI 識別矛盾 → 用戶確認
-    ↓                         → Gate 1 檢查
+    ↓                         → Phase Gate 1 檢查
     ↓
-[Phase II] AI 建立假設台帳 → 用戶補充/修改
+[Phase 2: Diverge] AI 建立假設台帳 → 用戶補充/修改
     ↓                       → AI 生成 TRIZ 解法
     ↓                       → AI 生成 SCAMPER 變形
     ↓                       → 用戶彙整方案集合
     ↓                       → MUST 快篩
-    ↓                       → Gate 2 檢查
+    ↓                       → Phase Gate 2 檢查
     ↓
-[Phase III] 用戶設定 WANT 權重
+[Phase 3: Converge] 用戶設定 WANT 權重
     ↓                        → 用戶基於證據評分
     ↓                        → AI 計算加權分
     ↓                        → 風險評估 (AC)
     ↓                        → AI 生成 KT 決策記錄草稿
     ↓                        → 用戶簽核
-    ↓                        → Gate 3 檢查
+    ↓                        → Phase Gate 3 檢查
     ↓
 匯出 Markdown 報告
 ```
@@ -107,8 +107,8 @@
 | 里程碑 | 時程 | 交付物 |
 |--------|------|--------|
 | M0: 專案骨架 | Day 1-2 | FastAPI + SQLite + 基本 model |
-| M1: Phase I 核心 | Day 3-7 | 任務定義表 + 索克拉底 + 矛盾識別 |
-| M2: Phase II 核心 | Day 8-14 | 假設台帳 + TRIZ + SCAMPER + 方案集合 + MUST |
-| M3: Phase III 核心 | Day 15-21 | KT WANT + AC + 決策記錄 + Gate |
+| M1: Phase 1: Define 核心 | Day 3-7 | 任務定義表 + 索克拉底 + 矛盾識別 |
+| M2: Phase 2: Diverge 核心 | Day 8-14 | 假設台帳 + TRIZ + SCAMPER + 方案集合 + MUST |
+| M3: Phase 3: Converge 核心 | Day 15-21 | KT WANT + AC + 決策記錄 + Gate |
 | M4: UI 串接 | Day 22-28 | Streamlit UI 走通全流程 |
 | M5: 端到端測試 | Day 29-30 | 用真實案例跑一遍 |

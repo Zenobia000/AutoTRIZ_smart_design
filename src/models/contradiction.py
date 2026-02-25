@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Text, DateTime, ForeignKey
+from sqlalchemy import String, Text, DateTime, ForeignKey, Integer, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database import Base
@@ -18,4 +18,9 @@ class Contradiction(Base):
     engineering_desc: Mapped[str] = mapped_column(Text)
     physical_contradiction: Mapped[str] = mapped_column(Text, default="")
     source: Mapped[str] = mapped_column(Text, default="")
+    # Unified TRIZ solve fields
+    contradiction_types: Mapped[dict] = mapped_column(JSON, default=list)  # ["technical", "physical", "sufield"]
+    improve_param_id: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)  # TRIZ 39 param ID
+    worsen_param_id: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)   # TRIZ 39 param ID
+    sufield_state: Mapped[str] = mapped_column(String(20), default="")  # incomplete/harmful/insufficient/measurement
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))

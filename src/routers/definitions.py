@@ -57,9 +57,9 @@ def generate_definition(project_id: str, req: GenerateRequest, db: Session = Dep
     defn.non_goals = result.get("non_goals", [])
     defn.critical_metrics = result.get("critical_metrics", [])
 
-    # Update project status to PHASE_I
+    # Update project status to PHASE_1
     if project.status == "DRAFT":
-        project.status = "PHASE_I"
+        project.status = "PHASE_1"
 
     db.commit()
     db.refresh(defn)
