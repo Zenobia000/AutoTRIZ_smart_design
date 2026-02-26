@@ -2,18 +2,20 @@
 
 ---
 
-**文件版本:** `v1.0`
-**最後更新:** `2026-02-24`
+**文件版本:** `v2.0`
+**最後更新:** `2026-02-25`
 **主要作者:** `AI Agent`
 **審核者:** `User/AI Agent`
 **狀態:** `Draft`
 
 **相關文檔:**
-- 專案 PRD: `/home/os-sunnie.gd.weng/python_workstation/delta-project/ebike/rd_design_copilot/docs/e2e/PRD_RD_Design_Copilot.md`
-- 系統架構文檔 (SA): 
-    - `/home/os-sunnie.gd.weng/python_workstation/delta-project/ebike/rd_design_copilot/docs/e2e/RD_Design_Copilot_整合流程.md`
-    - `/home/os-sunnie.gd.weng/python_workstation/delta-project/ebike/rd_design_copilot/docs/e2e/RD_Design_Copilot_State_Machine.md`
-- API 設計規範: `N/A`
+- 專案 PRD: `docs/e2e/PRD_RD_Design_Copilot.md`
+- 系統架構文檔 (SA):
+    - `docs/e2e/RD_Design_Copilot_整合流程.md`
+    - `docs/e2e/RD_Design_Copilot_State_Machine.md`
+    - `docs/e2e/AI_Agent_Architecture.md`
+- UI 簡易設計: `rd_assistant_design_system/system_architecture/UI_簡易設計.md`
+- 命名規範: `docs/e2e/Naming_Convention.md`
 
 ---
 
@@ -37,9 +39,9 @@
 - [8. 前後端協作契約](#8-前後端協作契約)
 - [9. 監控與安全](#9-監控與安全)
 
-**Part B — 資訊架構與頁面規格** (從 PRD + Part A 萃取)
+**Part B — 資訊架構與頁面規格** (6+1 頁面架構, Apple 設計哲學)
 - [10. 核心設計原則與 IA 策略](#10-核心設計原則與-ia-策略)
-- [11. 資訊架構總覽](#11-資訊架構總覽)
+- [11. 6+1 頁面架構總覽](#11-61-頁面架構總覽)
 - [12. 核心用戶旅程](#12-核心用戶旅程)
 - [13. 網站地圖與導航結構](#13-網站地圖與導航結構)
 - [14. 頁面詳細規格](#14-頁面詳細規格)
@@ -544,335 +546,557 @@ interface ApiResponse<T> {
     ↓
 設計策略：結構化發散、嚴格收斂、最小驗證。
     ↓
-架構決策：採用雙層狀態機管理流程與工件生命週期，利用數位線索串聯，並提供 AI 輔助的方法論工具箱。
+架構決策：6+1 頁面架構 + 8-Gate 內嵌系統 + AI 隱形基礎設施。
 ```
 
-### 10.2 資訊架構原則
+### 10.2 Apple 設計哲學三支柱
 
-#### 簡化原則
-- ✅ **保留**：任務定義、假設台帳、矛盾識別、TRIZ/SCAMPER 變形、方案集合、KT 決策記錄等核心功能。
-- ❌ **移除**：不直接服務於概念設計核心流程（如自動生成可簽核 CAD/CAE 文件）的功能。
-- 🎯 **專注**：於結構化早期設計流程，將風險管理前置化，實現可追溯的決策。
+| 原則 | 定義 | 在本系統的實踐 |
+|:-----|:-----|:---------------|
+| **Progressive Disclosure** | 只在需要時才顯示複雜度 | Gate 內嵌於頁面底部，不另開頁面；子步驟用 Accordion 漸進展開 |
+| **Direct Manipulation** | 用戶操作即產出 | 填表 = 建立工件；拖拉 = 排序方案；點擊 = 展開細節 |
+| **AI as Invisible Infrastructure** | AI 是基礎設施，不是主角 | 用戶看到的是「結果卡片」，不是「AI 正在思考」 |
+
+### 10.3 必填 vs Agent 處理 分類原則
+
+| 分類 | 說明 | 視覺表現 |
+|:-----|:-----|:---------|
+| **必填** (Human Input) | 用戶必須提供的核心判斷 | 白底輸入框 + 紅色星號 ★ |
+| **Agent 處理** (Auto) | AI 自動生成，用戶可修改 | 灰底卡片 + `[AI]` 標籤 + 編輯按鈕 |
+| **必須呈現** (Display) | 系統計算結果，不可編輯 | 彩色徽章 / 進度條 / 圖表 |
+
+### 10.4 資訊架構原則
+
+#### 簡化原則（6+1 頁面 vs 舊版 10+ 頁面）
+- **合併相關步驟**：將同一認知階段的步驟合併到同一頁面，用 Tabs 切換
+- **Gate 不佔頁面**：Gate 內嵌在功能頁底部，作為 checklist 指示器
+- **AI 結果預設收合**：避免資訊過載，用戶需要時才展開
 
 #### 認知負荷優化
-- **決策點數量**：從模糊、無限的決策點，收斂到 KT 決策分析框架下有限且有證據支撐的決策點。
-- **每頁專注度**：每個頁面或功能模塊聚焦於一個核心任務（例如：任務定義頁面、假設台帳頁面、方案探索頁面）。
-- **資訊分層**：透過清晰的流程階段（Phase 1-3）和工件生命週期管理，將複雜資訊分層呈現。
+- **決策點數量**：8 個 Gate 分散在 6 個頁面中，每頁最多 2 個 Gate
+- **每頁專注度**：每頁聚焦一個認知階段（定義/探索/追蹤/創造/審查/決策）
+- **資訊分層**：Phase 色帶 → 頁面 Tabs → Accordion 子步驟 → 展開細節
 
 #### 架構模式
-- **選擇：** 混合架構 — **理由：** 主體導航採用層級結構以符合專案管理邏輯，而核心設計流程則以中心輻射模式支持迭代發散與收斂。
+- **選擇：** 6+1 Hub-Spoke — **理由：** Dashboard 作為 Hub，6 個功能頁作為 Spoke，每頁用 Tabs 管理多個 Step
 
 ---
 
-## 11. 資訊架構總覽
+## 11. 6+1 頁面架構總覽
 
-### 11.1 系統層次結構
+### 11.1 頁面 → Step → Gate 映射
+
+| # | 頁面 | 英文名 | 對應 Step | 內嵌 Gate | 核心動作 | 預期停留 |
+|:--|:-----|:-------|:----------|:----------|:---------|:---------|
+| 0 | Dashboard | Dashboard | — | — | 專案總覽 + Phase 進度 | 短 |
+| 1 | 定義簡報 | Brief | 1.1 | Gate 1.1 | Mission + 硬約束 + KPI | 中 |
+| 2 | 問題探索 | Explore | 1.2, 1.3 | Gate 1.2, Phase Gate 1 | 索克拉底 + 矛盾 + 因果迴路 | 長 |
+| 3 | 假設追蹤 | Track | 2.1 | Gate 2.1 | 假設 Kanban + 未知集合 U | 長 |
+| 4 | 方案創造 | Create | 2.2.1~2.2.6, 2.3 | Gate 2.2, Phase Gate 2 | Anti-Anchor→TRIZ→SCAMPER→方案→MUST→Pre-CAD | 長 |
+| 5 | 設計審查 | Review | 3.1, 3.1.loop | Gate 3.1 | 證據矩陣 + 風險 + 最小實驗 | 長 |
+| 6 | 最終決策 | Decide | 3.2, 3.3 | Gate 3.2, Phase Gate 3 | WANT + KT 決策 + 匯出 | 中 |
+
+**總計：** 7 頁（含 Dashboard）— 較舊版 10 頁減少 30%
+
+### 11.2 必填 vs Agent 處理 全覽
+
+**必填項目（12 項 — 用戶必須提供的核心判斷）：**
+
+| 頁面 | 必填項 | 原因 |
+|:-----|:-------|:-----|
+| Brief | Mission 陳述 | 定義專案根本目的 |
+| Brief | Hard Constraints | 不可違反的硬邊界 |
+| Brief | Top 3 KPI | 成敗判斷標準 |
+| Explore | 索克拉底回答 | 人類領域知識 |
+| Explore | 斷路點標記 | 工程判斷 |
+| Track | 假設風險等級 | 人類判斷 |
+| Create | 反路線（Anti-Anchor） | 避免路徑依賴 |
+| Create | Pre-CAD 5 維度評分 | 工程審查判斷 |
+| Review | 風險 P/S 評估 | 人類經驗判斷 |
+| Review | 實驗結果 | 實際數據 |
+| Decide | WANT 權重+評分 | 團隊共識 |
+| Decide | 決策聲明+簽核 | 責任歸屬 |
+
+**Agent 自動處理項目（13 項 — AI 生成，用戶可修改）：**
+
+| 頁面 | Agent 產出 | 方法 |
+|:-----|:-----------|:-----|
+| Brief | 5W1H 任務定義表 | Analyst Agent |
+| Explore | 索克拉底問題 (6 類) | Analyst Agent |
+| Explore | 矛盾識別 (TC/PC) | Analyst Agent |
+| Explore | 因果迴路圖 | Analyst Agent |
+| Track | 假設提取 | 從索克拉底回答自動萃取 |
+| Track | 未知集合 U 建議 | Analyst Agent |
+| Create | TRIZ 原理具體化 | TRIZ Solver Agent (3 路徑) |
+| Create | 子系統建議 | TRIZ Solver Agent |
+| Create | SCAMPER 變形 | TRIZ Solver Agent |
+| Create | 方案整合生成 | TRIZ Solver Agent |
+| Review | 證據矩陣聚合 | 系統自動計算 |
+| Review | 風險 RPN + 缺口分析 | Evaluator Agent |
+| Decide | KT 決策草稿 | Evaluator Agent |
+
+### 11.3 12 個視覺化亮點
+
+| # | 亮點 | 頁面 | 類型 | 說明 |
+|:--|:-----|:-----|:-----|:-----|
+| 1 | Phase 進度條 | Dashboard | 色帶+圖標 | `✅`/`◉`/`○` 三態，Phase 色塊 |
+| 2 | 假設 Kanban | Track | 四欄拖拉板 | Draft→Testing→Verified→Killed |
+| 3 | 因果迴路圖 (CLD) | Explore | 互動式節點圖 | 正/負回饋標記，可標記斷路點 |
+| 4 | TRIZ 三路徑 Tabs | Create | Tab 切換 | TC/PC/SF 三條路徑並排對比 |
+| 5 | MUST 紅綠矩陣 | Create | 熱力表格 | `✅`=綠/`❌`=紅/`⚠️`=橙 |
+| 6 | Pre-CAD 5 維度 | Create | 雷達圖 | 5 維度 1-5 分視覺化 |
+| 7 | 證據矩陣熱力圖 | Review | 色階表格 | E0=紅→E4=綠 |
+| 8 | 風險 P×S 色階 | Review | 風險矩陣 | H*=深紅, H=紅, M=橙, L=綠 |
+| 9 | WANT 分數排行 | Decide | 橫條圖 | 方案分數視覺比較 |
+| 10 | Gate 內嵌指示器 | 所有頁面 | 底部 checklist | `✅`/`⚠️`/`❌` 三態 |
+| 11 | Anti-Anchor 警告 | Create | 黃色提示卡 | 路徑依賴偵測提醒 |
+| 12 | 決策三段摘要 | Decide | 卡片組 | MUST→WANT→Risk 漏斗視覺化 |
+
+### 11.4 系統層次結構
 
 ```mermaid
 graph TB
+    subgraph "Dashboard"
+        D0[專案列表 + 進度總覽]
+    end
     subgraph "Phase 1: Define"
-        S1_1_IA[Step 1.1: 問題界定<br/>Constraint] --> S1_2_IA[Step 1.2: 理解全貌<br/>Contradiction, Assumption]
-        S1_2_IA --> S1_3_IA[Step 1.3: 系統建模<br/>Contradiction, Breakpoint]
+        P1_Brief[Brief<br/>Step 1.1<br/>Gate 1.1]
+        P1_Explore[Explore<br/>Step 1.2 + 1.3<br/>Gate 1.2 + Phase Gate 1]
     end
     subgraph "Phase 2: Diverge"
-        S2_1_IA[Step 2.1: 假設與驗證規劃<br/>Assumption] --> S2_2_IA[Step 2.2: 創造與調整<br/>Concept Route, Interface]
-        S2_2_IA --> S2_3_IA[Step 2.3: Pre-CAD 設計審查<br/>Pre-CAD Review Report]
+        P2_Track[Track<br/>Step 2.1<br/>Gate 2.1]
+        P2_Create[Create<br/>Step 2.2 + 2.3<br/>Gate 2.2 + Phase Gate 2]
     end
     subgraph "Phase 3: Converge"
-        S3_1_IA[Step 3.1: 設計審查<br/>Evidence Matrix, Risk] --> S3_1_loop_IA[Step 3.1.loop: 證據補齊<br/>Evidence]
-        S3_1_loop_IA --> S3_1_IA
-        S3_1_IA --> S3_2_IA[Step 3.2: 決策與行動<br/>Decision Record]
-        S3_2_IA --> S3_3_IA[Step 3.3: 內化與傳達<br/>Asset]
+        P3_Review[Review<br/>Step 3.1 + 3.1.loop<br/>Gate 3.1]
+        P3_Decide[Decide<br/>Step 3.2 + 3.3<br/>Gate 3.2 + Phase Gate 3]
     end
-    S1_3_IA --> S2_1_IA
-    S2_3_IA --> S3_1_IA
+    D0 --> P1_Brief
+    P1_Brief --> P1_Explore
+    P1_Explore --> P2_Track
+    P2_Track --> P2_Create
+    P2_Create --> P3_Review
+    P3_Review --> P3_Decide
 ```
-
-### 11.2 頁面總覽矩陣
-
-| # | 頁面檔名 | 頁面名稱 | 主要職責 | 用戶目標 | 預期停留 | 導航深度 |
-|:--|:---------|:---------|:---------|:---------|:---------|:---------|
-| 0 | `project-list` | 專案列表 | 管理所有專案 | 選擇或創建專案 | 短 | Level 0 |
-| 1 | `project-dashboard` | 專案儀表板 | 總覽專案進度與決策記錄 | 了解專案狀態 | 中 | Level 1 |
-| 2 | `task-definition` | 任務定義 | 定義需求與約束 | 結構化任務邊界 | 中 | Level 2 |
-| 3 | `assumption-ledger` | 假設台帳 | 管理設計假設 | 追蹤不確定性與風險 | 長 | Level 2 |
-| 4 | `contradiction-identification` | 矛盾識別 | 識別並形式化工程矛盾 | 準備 TRIZ 分析 | 中 | Level 2 |
-| 5 | `solution-explorer` | 方案探索 | 生成與篩選設計方案 | 擴大設計可能性與收斂 | 長 | Level 2 |
-| 6 | `pre-cad-review` | Pre-CAD 審查 | 審查初步設計方案 | 收斂候選方案至 3-5 條 | 中 | Level 2 |
-| 7 | `design-review` | 設計審查 | 評估設計成熟度、識別風險與證據缺口 | 確保設計可驗證與可靠 | 長 | Level 2 |
-| 8 | `decision-record` | 決策記錄 | 記錄設計決策及理由 | 確保決策可追溯與可解釋 | 中 | Level 2 |
-| 9 | `knowledge-base` | 知識庫 | 瀏覽與沉澱設計知識資產 | 知識複用與學習 | 長 | Level 1 |
-
-**總計：** 10 頁
 
 ---
 
 ## 12. 核心用戶旅程
 
-### 12.1 主要旅程
+### 12.1 主要旅程（6+1 頁面映射）
 
 ```mermaid
 graph LR
-    A[1. 建立專案<br/>(Project List)<br/>短] --> B[2. 定義問題<br/>(Task Definition, Assumption Ledger, Contradiction Identification)<br/>中]
-    B --> C[3. 發散方案<br/>(Solution Explorer, Pre-CAD Review)<br/>長]
-    C --> D[4. 收斂決策<br/>(Design Review, Decision Record)<br/>長]
-    D --> E[5. 沉澱分享<br/>(Knowledge Base)<br/>短]
+    A[Dashboard<br/>選擇/建立專案] --> B[Brief<br/>定義邊界]
+    B --> C[Explore<br/>問答+矛盾+CLD]
+    C --> D[Track<br/>假設管理]
+    D --> E[Create<br/>發散+收斂方案]
+    E --> F[Review<br/>證據+風險]
+    F --> G[Decide<br/>WANT+KT+匯出]
 ```
 
 ### 12.2 用戶旅程映射表
 
-| 階段 | 頁面 | 用戶心理狀態 | 設計目標 | 主要 CTA | 預期停留 | 轉換率目標 |
-|:-----|:-----|:-------------|:---------|:---------|:---------|:-----------|
-| 建立專案 | `project-list` | 準備開始新設計 | 簡潔快速建立新專案 | `新增專案` | 短 | N/A |
-| 定義問題 | `task-definition` | 尋求方向與邊界 | 完整結構化需求與約束 | `確認任務定義` | 中 | 80% (任務定義完成) |
-| 定義問題 | `assumption-ledger` | 擔憂未知、不確定性 | 窮盡並管理前提假設 | `新增假設` | 長 | 90% (關鍵假設皆記錄) |
-| 定義問題 | `contradiction-identification` | 識別設計瓶頸 | 將口語問題形式化為 TRIZ 矛盾 | `確認矛盾` | 中 | 75% (核心矛盾辨識) |
-| 發散方案 | `solution-explorer` | 尋求創意、突破既有框架 | 生成多樣性設計方案 | `生成方案` | 長 | 60% (方案通過 MUST 快篩) |
-| 發散方案 | `pre-cad-review` | 篩選、初步收斂 | 縮減候選集，減少早期投資 | `通過審查` | 中 | 80% (方案通過 Pre-CAD Gate) |
-| 收斂決策 | `design-review` | 權衡取捨、評估風險 | 確保設計 Robust 且可驗證 | `補齊證據` / `通過審查` | 長 | 70% (設計通過 CAD Gate) |
-| 收斂決策 | `decision-record` | 尋求共識、終局判斷 | 確立最終設計方向 | `簽核決策` | 中 | 95% (決策記錄完整) |
-| 沉澱分享 | `knowledge-base` | 總結、學習、知識傳承 | 將設計經驗知識資產化 | `匯出報告` | 短 | N/A |
+| 階段 | 頁面 | 用戶心理狀態 | 設計目標 | 主要 CTA | 內嵌 Gate |
+|:-----|:-----|:-------------|:---------|:---------|:----------|
+| 啟動 | Dashboard | 準備開始 | 快速建立或選擇專案 | `新增專案` | — |
+| 定義 | Brief | 尋求方向 | 結構化需求邊界 | `確認 → Explore` | Gate 1.1 |
+| 探索 | Explore | 質疑與發現 | 窮盡問題空間 | `確認 → Track` | Gate 1.2, PG1 |
+| 追蹤 | Track | 擔憂未知 | 管理假設與未知 | `確認 → Create` | Gate 2.1 |
+| 創造 | Create | 尋求突破 | 多樣性方案+快速篩選 | `確認 → Review` | Gate 2.2, PG2 |
+| 審查 | Review | 權衡取捨 | 補齊證據+評估風險 | `補齊` / `通過` | Gate 3.1 |
+| 決策 | Decide | 終局判斷 | 確立方向+簽核 | `簽核決策` | Gate 3.2, PG3 |
 
-### 12.3 決策點分析
+### 12.3 8-Gate 決策點分析
 
 ```mermaid
 graph TD
-    Start([用戶啟動專案]) --> A{Gate 1.1: 任務定義明確?}
-    A -->|否| End([重新定義任務])
-    A -->|是| B{Phase Gate 1: 系統建模完成，矛盾明確?}
-    B -->|否| End
-    B -->|是| C{Gate 2.2: Pre-CAD 審查通過，候選方案收斂?}
-    C -->|否| End
-    C -->|是| D{Phase Gate 2: CAD 審查通過，證據充足?}
-    D -->|否| D6e{證據補齊?}
-    D6e -->|是| D
-    D6e -->|否| End
-    D -->|是| E{Gate 3.2: KT 決策完成，主路線選定?}
-    E -->|否| End
-    E -->|是| F([完成專案，知識沉澱])
+    Start([用戶啟動專案]) --> G11{Gate 1.1<br/>Mission+約束+KPI?}
+    G11 -->|通過| G12{Gate 1.2<br/>≥10假設+≥3矛盾?}
+    G12 -->|通過| PG1{Phase Gate 1<br/>CLD+斷路點?}
+    PG1 -->|通過| G21{Gate 2.1<br/>高風險假設有實驗?}
+    G21 -->|通過| G22{Gate 2.2<br/>≥3方案+MUST?}
+    G22 -->|通過| PG2{Phase Gate 2<br/>Pre-CAD通過?}
+    PG2 -->|通過| G32{Gate 3.2<br/>決策簽核?}
+    G32 -->|通過| PG3{Phase Gate 3<br/>知識沉澱?}
+    PG3 -->|通過| End([完成專案])
+    G11 -->|未通過| Fix1([返回 Brief 補強])
+    G12 -->|未通過| Fix2([返回 Explore 補強])
+    PG1 -->|未通過| Fix2
+    G21 -->|未通過| Fix3([返回 Track 補強])
+    G22 -->|未通過| Fix4([返回 Create 補強])
+    PG2 -->|未通過| Fix4
+    G32 -->|未通過| Fix5([返回 Decide 補強])
+    PG3 -->|未通過| Fix5
 ```
 
-**總決策點：** 5 個主要 Gate (Gate 1.1, Phase Gate 1, Gate 2.2, Phase Gate 2, Gate 3.2) + 1 個迴圈決策 (Step 3.1.loop: 證據補齊)。
+**總決策點：** 8 個 Gate（3 個 Phase Gate + 5 個 Step Gate），全部內嵌在 6 個功能頁中。
 
 ---
 
 ## 13. 網站地圖與導航結構
 
-### 13.1 完整網站地圖
+### 13.1 6+1 網站地圖
 
 ```
 RD Design Copilot (/)
 │
-├─ 0. 專案列表 (/projects) [Level 0]
-│  └─ → 專案儀表板
+├─ Dashboard (/projects) [Level 0]
+│  ├─ 專案列表
+│  ├─ 專案建立 (/projects/create)
+│  └─ 專案總覽 (/projects/:id)
 │
-├─ 1. 專案儀表板 (/projects/:id) [Level 1]
-│  ├─ 任務定義頁面 (/projects/:id/task-definition)
-│  ├─ 假設台帳頁面 (/projects/:id/assumption-ledger)
-│  ├─ 矛盾識別頁面 (/projects/:id/contradiction-identification)
-│  ├─ 方案探索頁面 (/projects/:id/solution-explorer)
-│  ├─ Pre-CAD 審查頁面 (/projects/:id/pre-cad-review)
-│  ├─ 設計審查頁面 (/projects/:id/design-review)
-│  ├─ 決策記錄頁面 (/projects/:id/decision-record)
-│  └─ → 知識庫 (全局)
+├─ Brief (/projects/:id/brief) [Level 1]
+│  └─ Step 1.1 + Gate 1.1
 │
-├─ 2. 知識庫 (/knowledge-base) [Level 1]
-│  └─ → 專案儀表板 (特定知識關聯)
+├─ Explore (/projects/:id/explore) [Level 1]
+│  ├─ Tab: 索克拉底問答 (Step 1.2)
+│  ├─ Tab: 矛盾識別 (Step 1.2)
+│  ├─ Tab: 因果迴路圖 (Step 1.3)
+│  └─ Gate 1.2 + Phase Gate 1
+│
+├─ Track (/projects/:id/track) [Level 1]
+│  ├─ Tab: 假設 Kanban (Step 2.1)
+│  ├─ Tab: 未知集合 U
+│  └─ Gate 2.1
+│
+├─ Create (/projects/:id/create) [Level 1]
+│  ├─ Accordion: Anti-Anchor Sprint (Step 2.2.1)
+│  ├─ Accordion: TRIZ 解矛盾 (Step 2.2.2)
+│  ├─ Accordion: 子系統定義 (Step 2.2.3)
+│  ├─ Accordion: SCAMPER 變形 (Step 2.2.4)
+│  ├─ Accordion: 方案集合 (Step 2.2.5)
+│  ├─ Accordion: MUST 快篩 (Step 2.2.6)
+│  ├─ Accordion: Pre-CAD 審查 (Step 2.3)
+│  └─ Gate 2.2 + Phase Gate 2
+│
+├─ Review (/projects/:id/review) [Level 1]
+│  ├─ Tab: 證據矩陣 (Step 3.1)
+│  ├─ Tab: 風險登錄 (Step 3.1)
+│  ├─ Tab: 最小實驗 (Step 3.1.loop)
+│  └─ Gate 3.1
+│
+├─ Decide (/projects/:id/decide) [Level 1]
+│  ├─ Tab: WANT 評分 (Step 3.2)
+│  ├─ Tab: KT 決策記錄 (Step 3.2)
+│  ├─ Tab: 匯出 (Step 3.3)
+│  └─ Gate 3.2 + Phase Gate 3
 │
 └─ 設定 (/settings) [Level 1]
-    └─ 使用者設定 (/settings/user)
 ```
 
 ### 13.2 導航連結矩陣
 
-| 來源 \ 目標 | 專案列表 | 專案儀表板 | 任務定義 | 假設台帳 | 矛盾識別 | 方案探索 | Pre-CAD 審查 | 設計審查 | 決策記錄 | 知識庫 |
-|:------------|:--------|:------------|:--------|:--------|:--------|:--------|:----------|:--------|:--------|:--------|
-| **專案列表** | - | ✅ (選擇專案) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (通用入口) |
-| **專案儀表板** | ✅ (返回) | - | ✅ (流程入口) | ✅ (流程入口) | ✅ (流程入口) | ✅ (流程入口) | ✅ (流程入口) | ✅ (流程入口) | ✅ (流程入口) | ✅ (相關知識) |
-| **任務定義** | ❌ | ✅ (完成返回) | - | ✅ (下一步) | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (相關知識) |
-| **假設台帳** | ❌ | ✅ (完成返回) | ✅ (上一步) | - | ✅ (下一步) | ❌ | ❌ | ❌ | ❌ | ✅ (相關知識) |
-| **矛盾識別** | ❌ | ✅ (完成返回) | ❌ | ✅ (上一步) | - | ✅ (下一步) | ❌ | ❌ | ❌ | ✅ (相關知識) |
-| **方案探索** | ❌ | ✅ (完成返回) | ❌ | ❌ | ✅ (上一步) | - | ✅ (下一步) | ❌ | ❌ | ✅ (相關知識) |
-| **Pre-CAD 審查** | ❌ | ✅ (完成返回) | ❌ | ❌ | ❌ | ✅ (上一步) | - | ✅ (下一步) | ❌ | ✅ (相關知識) |
-| **設計審查** | ❌ | ✅ (完成返回) | ❌ | ❌ | ❌ | ❌ | ✅ (上一步) | - | ✅ (下一步) | ✅ (相關知識) |
-| **決策記錄** | ❌ | ✅ (完成返回) | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (上一步) | - | ✅ (相關知識) |
-| **知識庫** | ✅ (返回) | ✅ (相關專案) | ✅ (相關任務) | ✅ (相關假設) | ✅ (相關矛盾) | ✅ (相關方案) | ✅ (相關審查) | ✅ (相關審查) | ✅ (相關決策) | - |
+| 來源 \ 目標 | Dashboard | Brief | Explore | Track | Create | Review | Decide |
+|:------------|:----------|:------|:--------|:------|:-------|:-------|:-------|
+| **Dashboard** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Brief** | ✅ | - | ✅ (下一步) | ❌ | ❌ | ❌ | ❌ |
+| **Explore** | ✅ | ✅ (上一步) | - | ✅ (下一步) | ❌ | ❌ | ❌ |
+| **Track** | ✅ | ❌ | ✅ (上一步) | - | ✅ (下一步) | ❌ | ❌ |
+| **Create** | ✅ | ❌ | ❌ | ✅ (上一步) | - | ✅ (下一步) | ❌ |
+| **Review** | ✅ | ❌ | ❌ | ❌ | ✅ (上一步) | - | ✅ (下一步) |
+| **Decide** | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ (上一步) | - |
 
-> ✅ 推薦路徑 | ⚠️ 需確認（有驗證） | ❌ 不存在
+> ✅ 可導航 | ❌ 不直接連結（需經過中間頁面）
 
 ---
 
 ## 14. 頁面詳細規格
 
-> 為每個核心頁面複製以下模板填寫。
-
-### 14.1 任務定義頁面
+### 14.0 Dashboard
 
 #### 基本信息
 
 | 屬性 | 值 |
 |:-----|:---|
-| **檔名** | `TaskDefinitionPage.tsx` |
-| **URL** | `/projects/:id/task-definition` |
-| **URL 參數** | `id=[專案ID]`（必須） |
-| **頁面類型** | 功能/表單 |
-| **導航深度** | Level 2 |
+| **檔名** | `DashboardPage.tsx` |
+| **URL** | `/projects` 及 `/projects/:id` |
+| **頁面類型** | 總覽/導航 |
 
-#### 職責與目標
+#### 關鍵組件
 
-| 項目 | 內容 |
-|:-----|:-----|
-| **主要任務** | 協助用戶結構化地定義新專案的需求、約束與目標。 |
-| **次要任務** | 識別關鍵 KPI，為後續決策提供依據。 |
-| **用戶目標** | 清楚地理解專案的邊界和成功的衡量標準。 |
-| **轉換目標** | 80% 的用戶能完整填寫並確認任務定義。 |
+| 組件 | 類型 | 說明 |
+|:-----|:-----|:-----|
+| ProjectList | 列表 | 搜尋+篩選+排序 |
+| ProjectCard | 卡片 | 名稱+Phase+進度條+Gate 通過數 |
+| PhaseProgressBar | 進度條 | `✅`/`◉`/`○` 三態 + Phase 色帶 |
+| QuickStats | 統計卡 | 矛盾/假設/方案/風險/實驗/證據 計數 |
+| CreateProjectDialog | 對話框 | 名稱+描述+硬約束 |
 
-#### 關鍵組件結構
+#### 必填 vs Agent
 
-```html
-<page-structure>
-  <!-- 1. 任務定義表單區塊 -->
-  <section class="task-definition-form">
-    <form-group>
-      <input-field label="Mission" name="mission" type="textarea" required />
-      <input-field label="Hard Constraints" name="hardConstraints" type="textarea" />
-      <input-field label="Soft Objectives" name="softObjectives" type="textarea" />
-      <input-field label="Non-Goals" name="nonGoals" type="textarea" />
-    </form-group>
-    <kpi-input-list label="三個最不能失敗指標" name="criticalKPIs" />
-    <button-group>
-      <button type="submit">確認任務定義</button>
-      <button type="button">取消</button>
-    </button-group>
-  </section>
-</page-structure>
-```
+| 項目 | 分類 | 說明 |
+|:-----|:-----|:-----|
+| 專案名稱 | 必填 | 建立時提供 |
+| 需求描述 | 必填 | 建立時提供 |
+| Phase 進度 | Display | 自動計算 |
+| Quick Stats | Display | 自動聚合 |
 
-#### 導航出口
+### 14.1 Brief — 定義簡報
+
+#### 基本信息
+
+| 屬性 | 值 |
+|:-----|:---|
+| **檔名** | `BriefPage.tsx` |
+| **URL** | `/projects/:id/brief` |
+| **對應 Step** | 1.1 |
+| **內嵌 Gate** | Gate 1.1 |
+
+#### 關鍵組件
+
+| 組件 | 類型 | 必填/Agent |
+|:-----|:-----|:-----------|
+| MissionInput | 文字框 | **必填** ★ |
+| HardConstraintTable | 可編輯表格 | **必填** ★ |
+| KPIInputList | 列表輸入 | **必填** ★ |
+| AITaskDefinition | 收合卡片 | Agent (`[AI]` 標籤) |
+| Gate1_1Checklist | 底部指示器 | Display |
+
+#### 導航
 
 ```javascript
 {
-  primary: '/projects/:id/assumption-ledger', // 下一步到假設台帳
-  secondary: '/projects/:id', // 返回專案儀表板
-  back: '/projects/:id',
+  primary: '/projects/:id/explore',  // → Explore
+  back: '/projects/:id',             // → Dashboard
 }
 ```
 
-#### 關鍵指標 (KPIs)
+### 14.2 Explore — 問題探索
 
-| 指標 | 目標值 | 衡量方式 |
-|:-----|:-------|:---------|
-| 任務定義完成率 | 80% | 資料庫中 `Constraint` 實體 `status` 為 `reviewed` 的比例 |
+#### 基本信息
 
-#### 驗收標準
+| 屬性 | 值 |
+|:-----|:---|
+| **檔名** | `ExplorePage.tsx` |
+| **URL** | `/projects/:id/explore` |
+| **對應 Step** | 1.2, 1.3 |
+| **內嵌 Gate** | Gate 1.2, Phase Gate 1 |
 
-- [x] 任務定義表單所有必填欄位可正常填寫與提交。
-- [x] 「三個最不能失敗指標」可新增、編輯、刪除，並能設定其判斷方式。
-- [x] 提交後數據能正確保存並更新專案狀態。
-- [x] 表單驗證邏輯正確，並能提供清晰的錯誤提示。
+#### Tabs 結構
+
+| Tab | Step | 關鍵組件 | 必填/Agent |
+|:----|:-----|:---------|:-----------|
+| 索克拉底問答 | 1.2 | QuestionCard (6 類) + AnswerInput | 回答 **必填** ★, 問題 Agent |
+| 矛盾識別 | 1.2 | ContradictionCard + TC/PC 分類 | 確認 **必填** ★, 識別 Agent |
+| 因果迴路圖 | 1.3 | CausalLoopDiagram + BreakpointMarker | 斷路點 **必填** ★, CLD Agent |
+
+#### 視覺化亮點
+- **CLD 互動式節點圖**：正/負回饋標記，可點擊標記斷路點
+- 標記為假設/矛盾 → 自動連結到 Track / Create
+
+### 14.3 Track — 假設追蹤
+
+#### 基本信息
+
+| 屬性 | 值 |
+|:-----|:---|
+| **檔名** | `TrackPage.tsx` |
+| **URL** | `/projects/:id/track` |
+| **對應 Step** | 2.1 |
+| **內嵌 Gate** | Gate 2.1 |
+
+#### Tabs 結構
+
+| Tab | 關鍵組件 | 必填/Agent |
+|:----|:---------|:-----------|
+| 假設 Kanban | 四欄拖拉板 (Draft/Testing/Verified/Killed) + PDCA 面板 | 風險等級 **必填** ★, 提取 Agent |
+| 未知集合 U | U 列表 + Assumption 關聯 | 新增 **必填** ★, 建議 Agent |
+
+#### 視覺化亮點
+- **Kanban 四欄拖拉板**：假設生命週期視覺化
+- **PDCA 面板**：Plan→Do→Check→Act 展開細節
+- 風險色彩：H=紅底, M=橙底, L=綠底
+
+### 14.4 Create — 方案創造
+
+#### 基本信息
+
+| 屬性 | 值 |
+|:-----|:---|
+| **檔名** | `CreatePage.tsx` |
+| **URL** | `/projects/:id/create` |
+| **對應 Step** | 2.2.1~2.2.6, 2.3 |
+| **內嵌 Gate** | Gate 2.2.1, Gate 2.2, Phase Gate 2 |
+
+#### Accordion 子步驟
+
+| Accordion | Step | 必填/Agent | 視覺亮點 |
+|:----------|:-----|:-----------|:---------|
+| Anti-Anchor Sprint | 2.2.1 | 反路線 **必填** ★ | 黃色警告卡 |
+| TRIZ 解矛盾 | 2.2.2 | 採用/跳過 **必填** | **TC/PC/SF 三路徑 Tabs** |
+| 子系統定義 | 2.2.3 | 確認 **必填** | Agent 建議 |
+| SCAMPER 變形 | 2.2.4 | 篩選 **必填** | 7 動作卡片 |
+| 方案集合 | 2.2.5 | 編輯 **必填** | 方案卡片+來源標記 |
+| MUST 快篩 | 2.2.6 | 評估 **必填** | **紅綠矩陣** |
+| Pre-CAD 審查 | 2.3 | 5 維度 **必填** ★ | **雷達圖** |
+
+### 14.5 Review — 設計審查
+
+#### 基本信息
+
+| 屬性 | 值 |
+|:-----|:---|
+| **檔名** | `ReviewPage.tsx` |
+| **URL** | `/projects/:id/review` |
+| **對應 Step** | 3.1, 3.1.loop |
+| **內嵌 Gate** | Gate 3.1 |
+
+#### Tabs 結構
+
+| Tab | 關鍵組件 | 必填/Agent | 視覺亮點 |
+|:----|:---------|:-----------|:---------|
+| 證據矩陣 | EvidenceMatrix (Assumption × EvidenceLevel) | Display (自動聚合) | **熱力圖 E0→E4** |
+| 風險登錄 | RiskRegister (P×S→RPN) | P/S **必填** ★ | **P×S 色階矩陣** |
+| 最小實驗 | ExperimentList + PDCA | 結果 **必填** ★ | 實驗狀態追蹤 |
+
+### 14.6 Decide — 最終決策
+
+#### 基本信息
+
+| 屬性 | 值 |
+|:-----|:---|
+| **檔名** | `DecidePage.tsx` |
+| **URL** | `/projects/:id/decide` |
+| **對應 Step** | 3.2, 3.3 |
+| **內嵌 Gate** | Gate 3.2, Phase Gate 3 |
+
+#### Tabs 結構
+
+| Tab | 關鍵組件 | 必填/Agent | 視覺亮點 |
+|:----|:---------|:-----------|:---------|
+| WANT 評分 | WantCriteriaEditor + ScoringMatrix | 權重+評分 **必填** ★ | **分數排行橫條圖** |
+| KT 決策記錄 | DecisionStatement + MUST/WANT/Risk 摘要 + ActionItems + SignOff | 決策+簽核 **必填** ★ | **三段摘要卡片** |
+| 匯出 | ExportCheckboxList + FormatSelector | 勾選 **必填** | 下載按鈕 |
+
+#### WANT 評分特殊功能
+- **「載入標準模板 W1-W6」按鈕**：一鍵建立 6 個標準條件
+- 每個條件有 10分/6分/2分 描述錨點 + evidence_type
 
 ---
 
 ## 15. 數據流與狀態管理
 
-### 15.1 數據流向圖
+### 15.1 6+1 頁面數據流
 
 ```mermaid
 graph TB
-    subgraph "Frontend App"
-        A[任務定義頁面] --> B[本地狀態 (UI State)]
-        C[方案探索頁面]
-        D[決策記錄頁面]
+    subgraph "Frontend 6+1 Pages"
+        Dashboard[Dashboard]
+        Brief[Brief]
+        Explore[Explore]
+        Track[Track]
+        Create[Create]
+        Review[Review]
+        Decide[Decide]
     end
-    subgraph "Backend API"
-        E[/api/projects/{id}/constraints]
-        F[/api/projects/{id}/solutions]
-        G[/api/projects/{id}/decisions]
+    subgraph "Backend API (FastAPI)"
+        API_P[/api/projects/]
+        API_D[/api/projects/:id/definitions]
+        API_Q[/api/projects/:id/questions]
+        API_C[/api/projects/:id/contradictions]
+        API_CL[/api/projects/:id/causal-loops]
+        API_A[/api/projects/:id/assumptions]
+        API_U[/api/projects/:id/unknown-factors]
+        API_T[/api/projects/:id/triz]
+        API_SC[/api/projects/:id/scamper]
+        API_ALT[/api/projects/:id/alternatives]
+        API_M[/api/projects/:id/must]
+        API_PCR[/api/projects/:id/pre-cad-reviews]
+        API_EXP[/api/projects/:id/experiments]
+        API_R[/api/projects/:id/risks]
+        API_EM[/api/projects/:id/evidence-matrix]
+        API_W[/api/projects/:id/want]
+        API_DEC[/api/projects/:id/decisions]
+        API_G[/api/projects/:id/gates/:gate_id/check]
+        API_EX[/api/projects/:id/export]
     end
-    subgraph "Database Layer"
-        DB_Constraint[Constraint Entity (PostgreSQL)]
-        DB_Solution[Concept Route Entity (PostgreSQL)]
-        DB_Decision[Decision Record Entity (PostgreSQL)]
-    end
-
-    A -->|POST / PUT| E
-    E -->|Writes to| DB_Constraint
-    DB_Constraint -- Query --> E
-    E -->|Returns Data| A
-
-    C -->|GET| F
-    F -->|Reads from| DB_Solution
-    DB_Solution -- Query --> F
-    F -->|Returns Data| C
-
-    D -->|GET| G
-    G -->|Reads from| DB_Decision
-    DB_Decision -- Query --> G
-    G -->|Returns Data| D
-
-    B -->|Updates UI| A
+    Dashboard -->|GET| API_P
+    Brief -->|POST/PUT| API_D
+    Explore -->|GET/POST| API_Q
+    Explore -->|GET/POST| API_C
+    Explore -->|GET/POST| API_CL
+    Track -->|GET/POST/PUT| API_A
+    Track -->|GET/POST| API_U
+    Create -->|POST| API_T
+    Create -->|POST| API_SC
+    Create -->|GET/POST/PUT| API_ALT
+    Create -->|GET/POST| API_M
+    Create -->|GET/POST| API_PCR
+    Review -->|GET| API_EM
+    Review -->|GET/POST| API_EXP
+    Review -->|GET/POST| API_R
+    Decide -->|GET/POST| API_W
+    Decide -->|GET/POST| API_DEC
+    Decide -->|GET| API_EX
+    Brief -->|GET| API_G
+    Explore -->|GET| API_G
+    Track -->|GET| API_G
+    Create -->|GET| API_G
+    Review -->|GET| API_G
+    Decide -->|GET| API_G
 ```
 
 ### 15.2 狀態持久化策略
 
 | 數據 | 存儲方式 | 有效期 | 說明 |
 |:-----|:---------|:-------|:-----|
-| 用戶偏好設定 | `localStorage` | 永久 | 用戶自定義的 UI 顯示、篩選條件、主題設定等 |
-| 登入 Token | `HttpOnly Cookie` | Session / Expires (配合 Refresh Token) | 用於身份驗證與會話管理，提升安全性 |
-| 專案草稿數據 | `localStorage` (選填) | 短暫 / 手動清除 | 用戶在表單中尚未提交的臨時數據，可選擇性持久化 |
-| 核心業務數據 | `PostgreSQL` | 永久 | 所有與專案相關的核心實體：Constraint, Assumption, Concept Route, Decision Record, Evidence 等 |
-| 大文件證據 | `S3 / MinIO` | 永久 | 仿真報告、測試數據等非結構化大文件 |
+| 用戶偏好設定 | `localStorage` | 永久 | UI 顯示偏好、篩選條件 |
+| 專案草稿數據 | `localStorage` | 短暫 | 表單中尚未提交的臨時數據 |
+| 核心業務數據 | `SQLite / PostgreSQL` | 永久 | 所有工件：Constraint, Assumption, Alternative, Decision 等 |
+| Gate 檢查結果 | 即時計算 | 不持久化 | 每次檢查即時查詢，不緩存 |
 
 ---
 
 ## 16. URL 結構與路由規範
 
-### 16.1 完整 URL 清單
+### 16.1 6+1 URL 清單
 
 ```
-站點根目錄: https://rd-design-copilot.your-domain.com  (示例)
+核心頁面 (6+1):
+├── /projects                      [Dashboard — 專案列表]
+├── /projects/create               [建立新專案]
+├── /projects/:id                  [Dashboard — 專案總覽]
+├── /projects/:id/brief            [Brief — 定義簡報]
+├── /projects/:id/explore          [Explore — 問題探索]
+├── /projects/:id/track            [Track — 假設追蹤]
+├── /projects/:id/create           [Create — 方案創造]
+├── /projects/:id/review           [Review — 設計審查]
+├── /projects/:id/decide           [Decide — 最終決策]
+└── /settings                      [用戶設定]
 
-核心頁面:
-├── /projects                      [專案列表頁面，可創建新專案]
-├── /projects/create               [創建新專案頁面]
-├── /projects/:id                  [專案儀表板頁面，`id` 為專案唯一識別符]
-├── /projects/:id/task-definition  [任務定義頁面，編輯專案的約束與目標]
-├── /projects/:id/assumption-ledger[假設台帳頁面，管理專案假設]
-├── /projects/:id/contradiction-identification [矛盾識別頁面，輸入並形式化矛盾]
-├── /projects/:id/solution-explorer[方案探索頁面，生成與篩選設計方案]
-├── /projects/:id/pre-cad-review   [Pre-CAD 審查頁面，收斂初步方案]
-├── /projects/:id/design-review    [設計審查頁面，評估設計成熟度]
-├── /projects/:id/decision-record  [決策記錄頁面，查看與簽核設計決策]
-├── /knowledge-base                [知識庫總覽頁面，瀏覽 Playbook、案例等]
-├── /knowledge-base/:category/:slug[知識庫文章詳情頁，`category` 和 `slug` 用於定位文章]
-└── /settings                      [用戶設定頁，包含個人資料、偏好設定等]
-
-API 端點:
-├── GET /api/projects              [獲取專案列表]
-├── POST /api/projects             [創建新專案]
-├── GET /api/projects/:id          [獲取單一專案詳情]
-├── PUT /api/projects/:id          [更新專案信息]
-├── DELETE /api/projects/:id       [刪除專案]
-├── GET /api/projects/:id/constraints   [獲取專案約束]
-├── PUT /api/projects/:id/constraints   [更新專案約束]
-├── GET /api/projects/:id/assumptions   [獲取專案假設列表]
-├── POST /api/projects/:id/assumptions  [創建專案假設]
-├── GET /api/projects/:id/contradictions[獲取專案矛盾列表]
-├── GET /api/projects/:id/solutions     [獲取專案方案列表]
-├── POST /api/projects/:id/solutions    [創建專案方案]
-├── GET /api/projects/:id/decisions     [獲取專案決策記錄]
-├── POST /api/projects/:id/decisions    [創建專案決策記錄]
-└── [METHOD] /api/[其他功能端點]       [根據模塊功能擴展]
+API 端點 (8-Gate):
+├── GET  /api/projects/:id/gates/:gate_id/check
+│   gate_id ∈ {"1.1", "1.2", "1.3", "2.1", "2.2", "2.3", "3.2", "3.3"}
+│
+核心 CRUD 端點:
+├── /api/projects/:id/definitions       [任務定義]
+├── /api/projects/:id/questions         [索克拉底問答]
+├── /api/projects/:id/contradictions    [矛盾]
+├── /api/projects/:id/causal-loops      [因果迴路]
+├── /api/projects/:id/assumptions       [假設]
+├── /api/projects/:id/unknown-factors   [未知集合 U]
+├── /api/projects/:id/triz              [TRIZ 解法]
+├── /api/projects/:id/scamper           [SCAMPER 變形]
+├── /api/projects/:id/alternatives      [方案集合]
+├── /api/projects/:id/must              [MUST 篩選]
+├── /api/projects/:id/pre-cad-reviews   [Pre-CAD 審查]
+├── /api/projects/:id/experiments       [最小實驗]
+├── /api/projects/:id/evidence-matrix   [證據矩陣 (聚合)]
+├── /api/projects/:id/risks             [風險登錄]
+├── /api/projects/:id/want              [WANT 評分]
+├── /api/projects/:id/decisions         [決策記錄]
+└── /api/projects/:id/export            [匯出]
 ```
 
 ### 16.2 URL 驗證與錯誤處理
 
 | 情境 | 處理方式 |
 |:-----|:---------|
-| 缺少必要參數 | 前端路由守衛檢查，若缺少則導航至錯誤頁面或提示。 |
-| 參數格式無效 | 前端路由守衛驗證參數類型（如 `:id` 必須為數字或 UUID），若無效則導航至 404 頁面。 |
-| 頁面不存在 | 服務器配置 404 頁面，前端捕獲路由錯誤並展示友好的 404 提示。 |
-| 用戶無權訪問 | 後端 API 返回 403 Forbidden，前端導航至無權限提示頁面。 |
+| 缺少必要參數 | 前端路由守衛檢查，導航至 Dashboard |
+| 參數格式無效 | 前端驗證 `:id` 為 UUID，無效則 404 |
+| 頁面不存在 | 顯示 404 頁面 |
+| Gate 未通過嘗試跳頁 | 顯示 Gate 未通過提示，引導返回補強 |
 
 ---
 
@@ -970,20 +1194,23 @@ API 端點:
 
 | 文檔 | 路徑 |
 |:-----|:-----|
-| PRD | `/home/os-sunnie.gd.weng/python_workstation/delta-project/ebike/rd_design_copilot/docs/e2e/PRD_RD_Design_Copilot.md` |
-| 系統架構文檔 (SA - 整合流程) | `/home/os-sunnie.gd.weng/python_workstation/delta-project/ebike/rd_design_copilot/docs/e2e/RD_Design_Copilot_整合流程.md` |
-| 系統架構文檔 (SA - 狀態機) | `/home/os-sunnie.gd.weng/python_workstation/delta-project/ebike/rd_design_copilot/docs/e2e/RD_Design_Copilot_State_Machine.md` |
-| KT 決策框架 | `KT_Robust_決策框架.md` (或內部連結) |
-| Figma 設計文件 | `[連結到 Figma Prototype/Spec]` |
-| Storybook 組件庫 | `[連結到 Storybook]` |
+| PRD | `docs/e2e/PRD_RD_Design_Copilot.md` |
+| 整合流程 | `docs/e2e/RD_Design_Copilot_整合流程.md` |
+| 狀態機 | `docs/e2e/RD_Design_Copilot_State_Machine.md` |
+| AI Agent 架構 | `docs/e2e/AI_Agent_Architecture.md` |
+| 命名規範 | `docs/e2e/Naming_Convention.md` |
+| UI 簡易設計 | `rd_assistant_design_system/system_architecture/UI_簡易設計.md` |
+| KT 決策框架 | `docs/raw/KT_Robust_決策框架.md` |
+| Pre-CAD 審查模板 | `docs/e2e/Pre_CAD_Review_Template.md` |
 
 ### C. 變更記錄
 
 | 日期 | 版本 | 作者 | 變更摘要 |
 |:-----|:-----|:-----|:---------|
 | 2026-02-24 | v1.0 | AI Agent | 初版建立（基於 PRD, SA 文件合併前端架構 + 資訊架構） |
+| 2026-02-25 | v2.0 | AI Agent | Part B 重構：10 頁→6+1 頁面架構，Apple 設計哲學，8-Gate 內嵌系統，必填/Agent 分類，12 視覺化亮點 |
 
 ---
 
-**最後更新：** 2026-02-24
+**最後更新：** 2026-02-25
 **維護者：** RD Design Copilot Frontend Team
