@@ -116,7 +116,7 @@ graph TB
 | Step | State Machine 中的 Human R&R | State Machine 中的 AI R&R | Agent 映射 |
 |------|---------------------------|-------------------------|-----------|
 | 1.1 | 定義 Mission / Hard Constraints / Soft Objectives | 改寫約束句、生成缺口問卷 | Analyst Agent |
-| 1.2 | 參與索克拉底問答、識別矛盾 | 固定執行六類提問、匯總矛盾列表 | Analyst Agent |
+| 1.2 | 參與索克拉底問答、識別矛盾 | 固定執行七類提問、匯總矛盾列表 | Analyst Agent |
 | 1.3 | 輔助因果迴路圖、正式化矛盾句 | 協助繪製因果迴路、提供 TRIZ 模板 | Analyst + TRIZ Solver |
 | 2.1 | 填寫假設台帳、定義未知集合、**對 Disproved 假設做處置決策** | 提供模板、整理未知因子、**假設推翻影響分析 (disprove + source_refs 反查 → impact_analysis)**、**批次萃取假設 (extract)** | Analyst + Knowledge |
 | 2.2 | 定義子系統（從建議選取或自訂）、審查方案、執行 MUST | Anti-Anchor (`POST /alternatives/anti-anchor`) / TRIZ / SCAMPER (含 `new_contradictions` 回饋 `POST /scamper/feedback-contradictions`) / 子系統建議 (`GET /scamper/subsystem-suggestions`) / 方案生成 / MUST 快篩 | TRIZ Solver + Analyst + Evaluator |
@@ -147,7 +147,7 @@ RD 路徑依賴的典型表現：
 #### 機制 1：Assumption Challenge（假設質疑）
 - **觸發點**：Step 1.2 索克拉底問答過程中
 - **執行者**：Analyst Agent
-- **對齊**：整合流程 §Step 1.2 六類提問中的「假設」與「反思」類
+- **對齊**：整合流程 §Step 1.2 七類提問中的「假設」與「反思」類
 - **作法**：
   1. 從索克拉底問答中提取所有隱含假設（如「必須用齒輪傳動」）
   2. 對每個假設提出反問：「如果不用 X，還有什麼替代方案？」
@@ -214,7 +214,7 @@ sequenceDiagram
     ORC->>EA: Gate 1.1 檢查
     EA-->>ORC: Gate 1.1 通過 (DRAFT→PHASE_1)
 
-    ORC->>AA: Step 1.2 理解全貌 - 索克拉底六類提問
+    ORC->>AA: Step 1.2 理解全貌 - 索克拉底七類提問
     ORC->>KA: Step 1.2 - 歷史假設/失效機制文獻
     AA-->>ORC: Contradiction (Draft) + Assumption (Draft)
     ORC->>AA: Step 1.2 - Assumption Challenge (假設質疑)
@@ -381,7 +381,7 @@ AI介入: ◐    ●    ●    ◐    ●    ●    ●    ●    ●    ●    
 
 | AI 機制 | 觸發 Step | Agent | 對齊整合流程章節 |
 |---------|----------|-------|----------------|
-| Assumption Challenge | Step 1.2 | Analyst | §Step 1.2 索克拉底六類提問 |
+| Assumption Challenge | Step 1.2 | Analyst | §Step 1.2 索克拉底七類提問 |
 | Forced Divergence | Step 2.2.1 + 2.2.2 | TRIZ Solver + Analyst | §5.1 Anti-Anchor Sprint + §2.2.2 TRIZ 解矛盾 |
 | Cross-Domain Search | Step 2.2.2/2.2.4 並行 | Knowledge | §5.0 知識增強輸入 (Web 外部專利/新材料) |
 | Anti-Anchor Gate | Step 2.2.1 → 2.2.2 | Evaluator | §5.1 Anti-Anchor Gate 檢查點 |

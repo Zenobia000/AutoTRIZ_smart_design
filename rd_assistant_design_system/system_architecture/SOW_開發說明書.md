@@ -48,7 +48,7 @@ RD Design Copilot MVP (v0.5)
 | 編號 | 交付項目 | 說明 |
 |------|---------|------|
 | PM-1 | task_definition.md | 任務定義表生成 |
-| PM-2 | socratic_questions.md | 索克拉底六類提問 |
+| PM-2 | socratic_questions.md | 索克拉底七類提問 |
 | PM-3 | contradiction_identify.md | TRIZ 矛盾識別 |
 | PM-4 | triz_solution.md | TRIZ 解法生成 |
 | PM-5 | scamper_variant.md | SCAMPER 七欄變形 |

@@ -126,7 +126,7 @@
 | WBS | 任務 | 產出 | 工時 | 前置 |
 |-----|------|------|------|------|
 | 1.6.1 | task_definition.md prompt | 任務定義表生成模板 | 0.5d | — |
-| 1.6.2 | socratic_questions.md prompt | 索克拉底六類提問模板 | 0.5d | — |
+| 1.6.2 | socratic_questions.md prompt | 索克拉底七類提問模板 | 0.5d | — |
 | 1.6.3 | contradiction_identify.md prompt | TRIZ 矛盾識別模板 | 0.5d | — |
 | 1.6.4 | triz_solution.md prompt | TRIZ 解法生成模板 | 0.5d | — |
 | 1.6.5 | scamper_variant.md prompt | SCAMPER 七欄變形模板 | 0.5d | — |
