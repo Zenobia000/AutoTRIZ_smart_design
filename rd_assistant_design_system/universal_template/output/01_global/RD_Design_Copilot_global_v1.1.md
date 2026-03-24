@@ -30,25 +30,40 @@
   - 模糊、主觀、不可追溯、經驗主義、無證據、純感覺
 
 ## [VISUAL DESIGN SYSTEM LAYER]
-- **配色主軸**：
-  - Primary：#007bff — 主要行動按鈕、品牌識別、重要連結
-  - Secondary：#6c757d — 次要按鈕、邊框、非強調文字、輔助資訊
-  - Accent：#fd7e14 — 強調資訊、警告、高亮元素
-  - Error：#dc3545 — 錯誤提示、負面操作確認
-  - Neutral：#f8f9fa — 頁面背景、卡片背景、分隔線
+- **配色主軸（台達電 CIS 企業識別色系）**：
+  - Primary (台達藍)：#0066B3 — 主導航列、主要按鈕 (Primary Button)、選中狀態、強調標題、品牌識別。*科技、可靠、專業智慧。*
+  - Secondary (台達綠)：#7AB800 — Pass 指標、成本節省數值、推薦方案、成功狀態 Toast。*環保、效率、安全。*
+  - Alert (警示紅)：#D93025 — 高風險雷點、Fail 指標、嚴重干涉警告、負面操作確認。
+  - Warning (警告橙)：#F5A623 — 中風險項目、需注意事項、非致命警告。
+  - Neutral (中性灰)：
+    - 頁面背景 (護眼工程灰)：#F4F6F9
+    - 卡片背景：#FFFFFF
+    - 主文字：#333333
+    - 次文字：#666666
+    - 邊框/分隔線：#E0E0E0
+    - 表格 Header 背景：#EAEAEA
+- **語義狀態標籤 (Status Badges)**：
+  - 高風險：背景 `#FDE7E9`, 文字 `#D93025`
+  - 安全/推薦：背景 `#EAF6DE`, 文字 `#5D9C23`
+  - 證據/文件連結：背景 `#E3F2FD`, 文字 `#0066B3`
+  - 中風險/警告：背景 `#FFF3E0`, 文字 `#E67E00`
 - **排版**：
   - 字級階層：H1(2.441rem) / H2(1.953rem) / H3(1.563rem) / Body(1rem) / Small(0.8rem)
   - 行高：1.5（正文）/ 1.2（標題）
-  - 字體："Noto Sans TC", "Helvetica Neue", Arial, "Segoe UI", sans-serif
+  - 字體：`"Noto Sans TC"`, `"Roboto"`, `"Helvetica Neue"`, Arial, sans-serif
+  - 數字專用：工程數據必須使用 Monospaced 等寬字體 (`"Roboto Mono"`, `"Consolas"`, monospace)，方便數據對齊比較
 - **元件風格**：
-  - 圓角：8px (0.5rem)
-  - 陰影：輕微陰影，增加層次感 (e.g., box-shadow: 0 4px 6px rgba(0,0,0,0.1))
-  - 邊框：1px solid $color-divider
-  - Icon：Material Icons (Google)，16px, 24px, 32px
+  - 圓角：4px (工程軟體不宜過圓，保持銳利專業感)
+  - 陰影：微陰影 (e.g., `box-shadow: 0 2px 4px rgba(0,0,0,0.05)`)
+  - 邊框：`1px solid #E0E0E0`
+  - 卡片 (Data Card)：白色背景、微陰影、左側色條 (Color Bar) 指示狀態 (綠=Pass, 紅=Fail, 藍=Info)
+  - 數據表格 (Smart Table)：Header 深灰背景 `#EAEAEA` 粗體字、斑馬紋 (Zebra striping)、Hover 淺藍高亮、單元格可備註/留言
+  - 證據氣泡 (Evidence Tooltip)：Hover 懸浮顯示來源、摘錄、原始文件連結
+  - Icon：Outline 線條風格，線條粗細 1.5px，銳利導角，尺寸 16px / 24px / 32px
 - **RWD 原則**：
-  - Mobile-first
-  - 關鍵斷點：640px (sm), 768px (md), 1024px (lg), 1280px (xl)
-  - 最小支援寬度：320px
+  - Desktop-first (工程軟體以桌面端為主要使用場景)
+  - 關鍵斷點：768px (md), 1024px (lg), 1280px (xl), 1440px (xxl)
+  - 最小支援寬度：1024px (工程高資訊密度需求)
 
 ## [UX PATTERN LAYER]
 - **共用 Header 規範**：
@@ -120,8 +135,8 @@
   - 側邊欄：快速篩選專案，創建新專案按鈕。
 - **Visual**：
   - 響應式網格佈局，卡片間距均勻。
-  - 關鍵指標使用 Primary/Accent 色彩高亮。
-  - 狀態標籤使用語義色。
+  - 關鍵指標使用台達藍 (#0066B3) / 台達綠 (#7AB800) 色彩高亮。
+  - 狀態標籤使用語義狀態標籤配色 (Status Badges)。
   - 圖表簡潔，使用設計系統預定義顏色。
 - **Interaction**：
   - 點擊專案卡片進入專案儀表板。
@@ -135,6 +150,7 @@
 - 當前版本：v1.1
 - 最後更新：2026-03-12
 - 變更紀錄：
+  - v1.1.1 - 導入台達電 CIS 企業識別色系：台達藍 (#0066B3)、台達綠 (#7AB800)、警示紅 (#D93025)；新增語義狀態標籤 (Status Badges)；元件風格對齊台達規範 (4px 圓角、微陰影、左側色條卡片、斑馬紋表格、證據氣泡)；Icon 改為 Outline 線條風格 (1.5px)；數字改用等寬字體；RWD 改為 Desktop-first (最小 1024px)
   - v1.1 - 對齊 E2E 架構：多模態素材上傳與 AI 約束提取 (PRD F1.7)、約束可行性驗證 Gate 1 (PRD F1.8)、七類索克拉底提問 (含重構)、DAG-based 矛盾收斂圖、矛盾嚴重度分級、架構健康監控、Pre-CAD Confidence Score、AI 主動挑戰者角色
   - v1.0 - 初版建立
 
